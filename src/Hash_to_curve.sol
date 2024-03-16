@@ -58,7 +58,7 @@ contract Hash_to_curve {
         bytes memory domain
     ) public view returns (bytes[][] memory) {
         uint8 M = 2;
-        uint8 len_in_bytes = count * M * HTF_L; // HTF_L is 64
+        uint16 len_in_bytes = uint16(count) * M * HTF_L; // HTF_L is 64
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         bytes
             memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
@@ -128,7 +128,7 @@ contract Hash_to_curve {
     // len_in_bytes is supposed to be able to be bigger but for now we just use 255  to simplify the code
     function expand_msg_xmd(
         bytes calldata message,
-        uint8 len_in_bytes,
+        uint16 len_in_bytes,
         bytes memory dst
     ) public pure returns (bytes memory) {
         // 1.  ell = ceil(len_in_bytes / b_in_bytes)
@@ -138,6 +138,7 @@ contract Hash_to_curve {
         uint ell = (len_in_bytes - 1) / 32 + 1;
 
         require(ell <= 255, "len_in_bytes too large for sha256");
+        // Not really needed because of parameter type
         require(len_in_bytes <= 65535, "len_in_bytes too large");
         // no length normalizing via hashing
         require(dst.length <= 255, "dst too long");
@@ -151,7 +152,7 @@ contract Hash_to_curve {
 
         // 5.  l_i_b_str = I2OSP(len_in_bytes, 2)
         // length in byte string?
-        bytes2 l_i_b_str = bytes2(uint16(len_in_bytes));
+        bytes2 l_i_b_str = bytes2(len_in_bytes);
 
         // 6.  msg_prime = Z_pad || msg || l_i_b_str || I2OSP(0, 1) || DST_prime
         bytes memory msg_prime = abi.encodePacked(
