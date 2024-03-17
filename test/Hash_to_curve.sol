@@ -217,4 +217,81 @@ contract Hash_to_curveTest is Test {
         assertEq(result[1][0], expected10);
         assertEq(result[1][1], expected11);
     }
+
+    function test_hash_to_field_g1_empty_msg() public view {
+        bytes
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
+        bytes[] memory result = hasher.hash_to_field_g1("", 2, custom_dst);
+        bytes
+            memory expected0 = hex"0ba14bd907ad64a016293ee7c2d276b8eae71f25a4b941eece7b0d89f17f75cb3ae5438a614fb61d6835ad59f29c564f";
+        bytes
+            memory expected1 = hex"019b9bd7979f12657976de2884c7cce192b82c177c80e0ec604436a7f538d231552f0d96d9f7babe5fa3b19b3ff25ac9";
+
+        assertEq(result[0], expected0);
+        assertEq(result[1], expected1);
+    }
+
+    function test_hash_to_field_g1_msg_abc() public view {
+        bytes
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
+        bytes[] memory result = hasher.hash_to_field_g1("abc", 2, custom_dst);
+        bytes
+            memory expected0 = hex"0d921c33f2bad966478a03ca35d05719bdf92d347557ea166e5bba579eea9b83e9afa5c088573c2281410369fbd32951";
+        bytes
+            memory expected1 = hex"003574a00b109ada2f26a37a91f9d1e740dffd8d69ec0c35e1e9f4652c7dba61123e9dd2e76c655d956e2b3462611139";
+
+        assertEq(result[0], expected0);
+        assertEq(result[1], expected1);
+    }
+
+    function test_hash_to_field_g1_msg_abcdef0123456789() public view {
+        bytes
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
+        bytes[] memory result = hasher.hash_to_field_g1(
+            "abcdef0123456789",
+            2,
+            custom_dst
+        );
+        bytes
+            memory expected0 = hex"062d1865eb80ebfa73dcfc45db1ad4266b9f3a93219976a3790ab8d52d3e5f1e62f3b01795e36834b17b70e7b76246d4";
+        bytes
+            memory expected1 = hex"0cdc3e2f271f29c4ff75020857ce6c5d36008c9b48385ea2f2bf6f96f428a3deb798aa033cd482d1cdc8b30178b08e3a";
+
+        assertEq(result[0], expected0);
+        assertEq(result[1], expected1);
+    }
+
+    function test_hash_to_field_g1_msg_q128() public view {
+        bytes
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
+        bytes[] memory result = hasher.hash_to_field_g1(
+            "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+            2,
+            custom_dst
+        );
+        bytes
+            memory expected0 = hex"010476f6a060453c0b1ad0b628f3e57c23039ee16eea5e71bb87c3b5419b1255dc0e5883322e563b84a29543823c0e86";
+        bytes
+            memory expected1 = hex"0b1a912064fb0554b180e07af7e787f1f883a0470759c03c1b6509eb8ce980d1670305ae7b928226bb58fdc0a419f46e";
+
+        assertEq(result[0], expected0);
+        assertEq(result[1], expected1);
+    }
+
+    function test_hash_to_field_g1_msg_a512() public view {
+        bytes
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
+        bytes[] memory result = hasher.hash_to_field_g1(
+            "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            2,
+            custom_dst
+        );
+        bytes
+            memory expected0 = hex"0a8ffa7447f6be1c5a2ea4b959c9454b431e29ccc0802bc052413a9c5b4f9aac67a93431bd480d15be1e057c8a08e8c6";
+        bytes
+            memory expected1 = hex"05d487032f602c90fa7625dbafe0f4a49ef4a6b0b33d7bb349ff4cf5410d297fd6241876e3e77b651cfc8191e40a68b7";
+
+        assertEq(result[0], expected0);
+        assertEq(result[1], expected1);
+    }
 }
