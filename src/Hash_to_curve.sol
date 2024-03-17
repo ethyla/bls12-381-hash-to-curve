@@ -52,7 +52,7 @@ contract Hash_to_curve {
     // 7.     e_j = OS2IP(tv) mod p
     // 8.   u_i = (e_0, ..., e_(m - 1))
     // 9. return (u_0, ..., u_(count - 1))
-    function hash_to_field_fq2(
+    function hash_to_field_g2(
         bytes calldata message,
         uint8 count,
         bytes memory domain

@@ -107,18 +107,114 @@ contract Hash_to_curveTest is Test {
         assertEq(result, expected);
     }
 
-    function test_hash_to_field_fq2() public view {
-        bytes[][] memory result = hasher.hash_to_field_fq2("", 1, DST);
+    function test_hash_to_field_empty_msg() public view {
         bytes
-            memory expected1 = hex"16da1e6feccd22e6c66989dacceb151ff125450611b39ea5ca765cda844710d51af4dc626861306a3eccf92145b5d47b";
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
+        bytes[][] memory result = hasher.hash_to_field_g2("", 2, custom_dst);
         bytes
-            memory expected2 = hex"11ff784ffcc1f8a96dc093531449285022df656d2bc377c29ccbf7029aac742c0fead154443b8a07062a6a8f1da0fe9d";
-        console.logBytes(result[0][0]);
-        console.logBytes(result[0][1]);
-        console.logBytes(result[1][0]);
-        console.logBytes(result[1][1]);
+            memory expected00 = hex"03dbc2cce174e91ba93cbb08f26b917f98194a2ea08d1cce75b2b9cc9f21689d80bd79b594a613d0a68eb807dfdc1cf8";
+        bytes
+            memory expected01 = hex"05a2acec64114845711a54199ea339abd125ba38253b70a92c876df10598bd1986b739cad67961eb94f7076511b3b39a";
+        bytes
+            memory expected10 = hex"02f99798e8a5acdeed60d7e18e9120521ba1f47ec090984662846bc825de191b5b7641148c0dbc237726a334473eee94";
+        bytes
+            memory expected11 = hex"145a81e418d4010cc027a68f14391b30074e89e60ee7a22f87217b2f6eb0c4b94c9115b436e6fa4607e95a98de30a435";
 
-        assertEq(result[0][0], expected1);
-        assertEq(result[0][1], expected2);
+        assertEq(result[0][0], expected00);
+        assertEq(result[0][1], expected01);
+        assertEq(result[1][0], expected10);
+        assertEq(result[1][1], expected11);
+    }
+
+    function test_hash_to_field_msg_abc() public view {
+        bytes
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
+        bytes[][] memory result = hasher.hash_to_field_g2("abc", 2, custom_dst);
+
+        bytes
+            memory expected00 = hex"15f7c0aa8f6b296ab5ff9c2c7581ade64f4ee6f1bf18f55179ff44a2cf355fa53dd2a2158c5ecb17d7c52f63e7195771";
+        bytes
+            memory expected01 = hex"01c8067bf4c0ba709aa8b9abc3d1cef589a4758e09ef53732d670fd8739a7274e111ba2fcaa71b3d33df2a3a0c8529dd";
+        bytes
+            memory expected10 = hex"187111d5e088b6b9acfdfad078c4dacf72dcd17ca17c82be35e79f8c372a693f60a033b461d81b025864a0ad051a06e4";
+        bytes
+            memory expected11 = hex"08b852331c96ed983e497ebc6dee9b75e373d923b729194af8e72a051ea586f3538a6ebb1e80881a082fa2b24df9f566";
+
+        assertEq(result[0][0], expected00);
+        assertEq(result[0][1], expected01);
+        assertEq(result[1][0], expected10);
+        assertEq(result[1][1], expected11);
+    }
+
+    function test_hash_to_field_msg_abcdef0123456789() public view {
+        bytes
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
+        bytes[][] memory result = hasher.hash_to_field_g2(
+            "abcdef0123456789",
+            2,
+            custom_dst
+        );
+
+        bytes
+            memory expected00 = hex"0313d9325081b415bfd4e5364efaef392ecf69b087496973b229303e1816d2080971470f7da112c4eb43053130b785e1";
+        bytes
+            memory expected01 = hex"062f84cb21ed89406890c051a0e8b9cf6c575cf6e8e18ecf63ba86826b0ae02548d83b483b79e48512b82a6c0686df8f";
+        bytes
+            memory expected10 = hex"1739123845406baa7be5c5dc74492051b6d42504de008c635f3535bb831d478a341420e67dcc7b46b2e8cba5379cca97";
+        bytes
+            memory expected11 = hex"01897665d9cb5db16a27657760bbea7951f67ad68f8d55f7113f24ba6ddd82caef240a9bfa627972279974894701d975";
+
+        assertEq(result[0][0], expected00);
+        assertEq(result[0][1], expected01);
+        assertEq(result[1][0], expected10);
+        assertEq(result[1][1], expected11);
+    }
+
+    function test_hash_to_field_msg_q128() public view {
+        bytes
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
+        bytes[][] memory result = hasher.hash_to_field_g2(
+            "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+            2,
+            custom_dst
+        );
+
+        bytes
+            memory expected00 = hex"025820cefc7d06fd38de7d8e370e0da8a52498be9b53cba9927b2ef5c6de1e12e12f188bbc7bc923864883c57e49e253";
+        bytes
+            memory expected01 = hex"034147b77ce337a52e5948f66db0bab47a8d038e712123bb381899b6ab5ad20f02805601e6104c29df18c254b8618c7b";
+        bytes
+            memory expected10 = hex"0930315cae1f9a6017c3f0c8f2314baa130e1cf13f6532bff0a8a1790cd70af918088c3db94bda214e896e1543629795";
+        bytes
+            memory expected11 = hex"10c4df2cacf67ea3cb3108b00d4cbd0b3968031ebc8eac4b1ebcefe84d6b715fde66bef0219951ece29d1facc8a520ef";
+
+        assertEq(result[0][0], expected00);
+        assertEq(result[0][1], expected01);
+        assertEq(result[1][0], expected10);
+        assertEq(result[1][1], expected11);
+    }
+
+    function test_hash_to_field_msg_a512() public view {
+        bytes
+            memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
+        bytes[][] memory result = hasher.hash_to_field_g2(
+            "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            2,
+            custom_dst
+        );
+
+        bytes
+            memory expected00 = hex"190b513da3e66fc9a3587b78c76d1d132b1152174d0b83e3c1114066392579a45824c5fa17649ab89299ddd4bda54935";
+        bytes
+            memory expected01 = hex"12ab625b0fe0ebd1367fe9fac57bb1168891846039b4216b9d94007b674de2d79126870e88aeef54b2ec717a887dcf39";
+        bytes
+            memory expected10 = hex"0e6a42010cf435fb5bacc156a585e1ea3294cc81d0ceb81924d95040298380b164f702275892cedd81b62de3aba3f6b5";
+        bytes
+            memory expected11 = hex"117d9a0defc57a33ed208428cb84e54c85a6840e7648480ae428838989d25d97a0af8e3255be62b25c2a85630d2dddd8";
+
+        assertEq(result[0][0], expected00);
+        assertEq(result[0][1], expected01);
+        assertEq(result[1][0], expected10);
+        assertEq(result[1][1], expected11);
     }
 }
