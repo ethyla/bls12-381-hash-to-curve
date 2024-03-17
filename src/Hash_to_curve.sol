@@ -198,7 +198,7 @@ contract Hash_to_curve {
         bytes2 l_i_b_str = bytes2(len_in_bytes);
 
         // 6.  msg_prime = Z_pad || msg || l_i_b_str || I2OSP(0, 1) || DST_prime
-        bytes memory msg_prime = abi.encodePacked(
+        bytes memory msg_prime = bytes.concat(
             zpad,
             message,
             l_i_b_str,
@@ -214,27 +214,23 @@ contract Hash_to_curve {
         b[0] = sha256(msg_prime);
 
         // 8.  b_1 = H(b_0 || I2OSP(1, 1) || DST_prime)
-        b[1] = sha256(abi.encodePacked(b[0], hex"01", dst_prime));
+        b[1] = sha256(bytes.concat(b[0], hex"01", dst_prime));
         // console.log("b1");
         // console.logBytes32(b[1]);
 
-        bytes memory pseudo_random_bytes = abi.encodePacked(b[1]);
+        bytes memory pseudo_random_bytes = bytes.concat(b[1]);
         // console.log("pseudo_random_bytes");
         // console.logBytes(pseudo_random_bytes);
 
         // 9.  for i in (2, ..., ell):
         for (uint8 i = 2; i <= ell; i++) {
             // 10.    b_i = H(strxor(b_0, b_(i - 1)) || I2OSP(i, 1) || DST_prime)
-            // bytes memory tmp = abi.encodePacked(b[0] ^ b[i - 1]);
             bytes memory tmp = abi.encodePacked(b[0] ^ b[i - 1], i, dst_prime);
             bytes32 tmpHash = sha256(tmp);
             b[i] = tmpHash;
 
             // 11. uniform_bytes = b_1 || ... || b_ell
-            pseudo_random_bytes = abi.encodePacked(
-                pseudo_random_bytes,
-                tmpHash
-            );
+            pseudo_random_bytes = bytes.concat(pseudo_random_bytes, tmpHash);
         }
         // console.log("pseudo_random_bytes");
         // console.logBytes(pseudo_random_bytes);
