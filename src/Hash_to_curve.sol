@@ -26,6 +26,8 @@ contract Hash_to_curve {
     // 6. return P
     function hash_to_curve_g1(bytes calldata message) public {}
 
+    function hash_to_curve_g2(bytes calldata message) public {}
+
     // hash_to_field(msg, count)
     // Parameters:
     // - DST, a domain separation tag (see Section 3.1).
@@ -72,8 +74,10 @@ contract Hash_to_curve {
         );
 
         bytes[][] memory u = new bytes[][](count);
+
         for (uint i = 0; i < count; i++) {
             bytes[] memory e = new bytes[](M);
+
             for (uint j = 0; j < M; j++) {
                 uint256 offset = HTF_L * (j + i * M);
 
@@ -182,14 +186,15 @@ contract Hash_to_curve {
         // 9.  for i in (2, ..., ell):
         for (uint8 i = 2; i <= ell; i++) {
             // 10.    b_i = H(strxor(b_0, b_(i - 1)) || I2OSP(i, 1) || DST_prime)
-            bytes memory tmp = abi.encodePacked(b[0] ^ b[i - 1]);
-            tmp = abi.encodePacked(tmp, i, dst_prime);
-            b[i] = sha256(tmp);
+            // bytes memory tmp = abi.encodePacked(b[0] ^ b[i - 1]);
+            bytes memory tmp = abi.encodePacked(b[0] ^ b[i - 1], i, dst_prime);
+            bytes32 tmpHash = sha256(tmp);
+            b[i] = tmpHash;
 
             // 11. uniform_bytes = b_1 || ... || b_ell
             pseudo_random_bytes = abi.encodePacked(
                 pseudo_random_bytes,
-                sha256(tmp)
+                tmpHash
             );
         }
         // console.log("pseudo_random_bytes");
@@ -218,7 +223,7 @@ contract Hash_to_curve {
         bytes memory _b,
         bytes memory _e,
         bytes memory _m
-    ) private view returns (bytes memory r) {
+    ) internal view returns (bytes memory r) {
         assembly {
             let bl := mload(_b)
             let el := mload(_e)
