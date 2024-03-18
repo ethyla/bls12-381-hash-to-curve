@@ -64,8 +64,6 @@ contract Hash_to_curve {
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         bytes
             memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
-        bytes
-            memory one = hex"0000000000000000000000000000000000000000000000000000000000000001";
 
         bytes memory pseudo_random_bytes = expand_msg_xmd(
             message,
@@ -90,9 +88,9 @@ contract Hash_to_curve {
                 // console.logBytes(tv);
                 // console.logBytes(modulus);
                 // console.logBytes(_modexp(tv, one, modulus));
-                e[j] = _modexp(tv, one, modulus);
+                e[j] = _modexp(tv, modulus);
+                u[i] = e;
             }
-            u[i] = e;
         }
         return u;
     }
@@ -107,8 +105,6 @@ contract Hash_to_curve {
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         bytes
             memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
-        bytes
-            memory one = hex"0000000000000000000000000000000000000000000000000000000000000001";
 
         bytes memory pseudo_random_bytes = expand_msg_xmd(
             message,
@@ -131,7 +127,7 @@ contract Hash_to_curve {
             // console.logBytes(modulus);
             // console.logBytes(_modexp(tv, one, modulus));
 
-            u[i] = _modexp(tv, one, modulus);
+            u[i] = _modexp(tv, modulus);
         }
         return u;
     }
@@ -250,19 +246,17 @@ contract Hash_to_curve {
      *              https://github.com/ethereum/EIPs/pull/198
      *
      * @param _b bytes base
-     * @param _e bytes base_inverse
-     * @param _m bytes exponent
+     * @param _m bytes modulus
      * @param r bytes result.
      */
     function _modexp(
         bytes memory _b,
-        bytes memory _e,
         bytes memory _m
     ) internal view returns (bytes memory r) {
         assembly {
             let bl := mload(_b)
-            let el := mload(_e)
             let ml := mload(_m)
+            let el := 0x20
 
             let freemem := mload(0x40) // Free memory pointer is always stored at 0x40
 
@@ -285,14 +279,16 @@ contract Hash_to_curve {
 
             // arg[4] = exp.bits @ +96+base.length
             let size := add(96, bl)
-            success := staticcall(
-                450,
-                0x4,
-                add(_e, 32),
-                el,
-                add(freemem, size),
-                el
-            )
+            mstore(add(freemem, size), 1)
+
+            // success := staticcall(
+            //     450,
+            //     0x4,
+            //     add(0x20, 32),
+            //     el,
+            //     add(freemem, size),
+            //     el
+            // )
 
             // arg[5] = mod.bits @ +96+base.length+exp.length
             size := add(size, el)
