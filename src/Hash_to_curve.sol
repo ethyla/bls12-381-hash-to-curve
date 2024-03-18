@@ -6,13 +6,6 @@ import {console} from "forge-std/Test.sol";
 contract Hash_to_curve {
     uint8 HTF_L = 64;
 
-    //         function HashToG1(msg)
-    //     fieldElement0 = HashToBase(msg, 0x00, 0x01)
-    //     fieldElement1 = HashToBase(msg, 0x02, 0x03)
-    //     curveElement0 = BaseToG1(fieldElement0)
-    //     curveElement1 = BaseToG1(fieldElement1)
-    //     g1Element = ECAdd(curveElement0, curveElement1)
-    //     return g1Element
     // end function
     // hash_to_curve(msg)
     // Input: msg, an arbitrary-length byte string.
@@ -25,6 +18,31 @@ contract Hash_to_curve {
     // 5. P = clear_cofactor(R)
     // 6. return P
     function hash_to_curve_g1(bytes calldata message) public {}
+
+    // Notes:
+    // abi for the precompiles is bytes32 concats, so like this bytes32[4] for two points or a G2 point
+    // so no length or anything. For reference a base field point is bytes32[2] (G1) and two points in the quadratic field are bytes32[8] or 256 bytes
+    // addition takes a concatination of two points so G1 = bytes32[4] and G2 = bytes32[8]
+    // multiplication takes the point and a concatinated int256
+    // map to curve g1 takes a 64 bytes field element
+    // map to curve g2 takes a 128 bytes field element
+    // all operations return a single point either G1 or G2 so either 128 or 256 bytes
+    // costs
+    // G1 addition
+    // 600 gas
+    // G1 multiplication
+    // 12000 gas
+    // G2 addition
+    // 4500 gas
+    // G2 multiplication
+    // 55000 gas
+    // Fp-to-G1 mappign operation
+    // Fp -> G1 mapping is 5500 gas.
+    // Fp2-to-G2 mappign operation
+    // Fp2 -> G2 mapping is 110000 gas
+    // it seems we will need each of these operations exactly once
+    // g1 total cost: 18100             current hash to field ca 120000 so total ca: 140000
+    // g2 total cost: 169500            current hash to field ca 220000 so total ca: 390000
 
     function hash_to_curve_g2(bytes calldata message) public {}
 
