@@ -39,9 +39,9 @@ contract Hash_to_curve {
     // Fp -> G1 mapping is 5500 gas.
     // Fp2-to-G2 mappign operation
     // Fp2 -> G2 mapping is 110000 gas
-    // it seems we will need each of these operations exactly once
-    // g1 total cost: 18100             current hash to field ca 120000 so total ca: 140000
-    // g2 total cost: 169500            current hash to field ca 220000 so total ca: 390000
+    // it seems we will need each of these operations exactly once (map is used 2 times)
+    // g1 total cost: 23600             current hash to field ca 30500 so total ca: 54100
+    // g2 total cost: 179500            current hash to field ca 49000 so total ca: 228500
 
     function hash_to_curve_g2(bytes calldata message) public {}
 

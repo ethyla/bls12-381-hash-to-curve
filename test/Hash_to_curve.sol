@@ -134,14 +134,6 @@ contract Hash_to_curveTest is Test {
             memory expected10 = hex"02f99798e8a5acdeed60d7e18e9120521ba1f47ec090984662846bc825de191b5b7641148c0dbc237726a334473eee94";
         bytes
             memory expected11 = hex"145a81e418d4010cc027a68f14391b30074e89e60ee7a22f87217b2f6eb0c4b94c9115b436e6fa4607e95a98de30a435";
-        console.logBytes(result[0][0]);
-        console.logBytes(result[0][1]);
-        console.logBytes(result[1][0]);
-        console.logBytes(result[1][1]);
-        console.logBytes(expected00);
-        console.logBytes(expected01);
-        console.logBytes(expected10);
-        console.logBytes(expected11);
 
         assertEq(result[0][0], expected00);
         assertEq(result[0][1], expected01);
