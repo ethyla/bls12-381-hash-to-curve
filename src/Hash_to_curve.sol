@@ -49,51 +49,46 @@ contract Hash_to_curve {
     // Input:
     // - msg, a byte string containing the message to hash.
     // - count, the number of elements of F to output.
+    // count is always 2 for curve to hash usage
     // - DST, a domain separation tag (see Section 3.1).
     function hash_to_field_fp2(
         bytes calldata message,
-        uint8 count,
         bytes memory domain
-    ) public view returns (bytes[][] memory) {
+    ) public view returns (bytes[2][2] memory) {
         uint8 M = 2;
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         bytes
             memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
 
         // 1. len_in_bytes = count * m * L
-        uint16 len_in_bytes = uint16(count) * M * HTF_L; // HTF_L is 64
+        // so always 2 * 2 * 64 = 256
+        uint16 len_in_bytes = uint16(256);
 
         // 2. uniform_bytes = expand_message(msg, DST, len_in_bytes)
-        bytes memory pseudo_random_bytes = expand_msg_xmd(
+        bytes32[] memory pseudo_random_bytes = expand_msg_xmd(
             message,
             len_in_bytes,
             domain
         );
 
-        bytes[][] memory u = new bytes[][](count);
+        bytes[2][2] memory u;
 
         // 3. for i in (0, ..., count - 1):
-        for (uint i = 0; i < count; i++) {
-            bytes[] memory e = new bytes[](M);
+        for (uint i = 0; i < 2; i++) {
             // 4.   for j in (0, ..., m - 1):
             for (uint j = 0; j < M; j++) {
                 // 5.     elm_offset = L * (j + i * m)
-                uint256 offset = HTF_L * (j + i * M);
-
                 // 6.     tv = substr(uniform_bytes, elm_offset, L)
                 bytes memory tv = new bytes(HTF_L);
-                for (uint k = 0; k < HTF_L; k++) {
-                    tv[k] = pseudo_random_bytes[k + offset];
-                }
-                // console.log("tv");
-                // console.logBytes(tv);
-                // console.logBytes(modulus);
-                // console.logBytes(_modexp(tv, one, modulus));
+                tv = bytes.concat(
+                    pseudo_random_bytes[(j + i * M) * 2],
+                    pseudo_random_bytes[(j + i * M) * 2 + 1]
+                );
+
                 // 7.     e_j = OS2IP(tv) mod p
-                e[j] = _modexp(tv, modulus);
+                // 8.   u_i = (e_0, ..., e_(m - 1))
+                u[i][j] = _modexp(tv, modulus);
             }
-            // 8.   u_i = (e_0, ..., e_(m - 1))
-            u[i] = e;
         }
         // 9. return (u_0, ..., u_(count - 1))
         return u;
@@ -101,32 +96,29 @@ contract Hash_to_curve {
 
     function hash_to_field_fp(
         bytes calldata message,
-        uint8 count,
         bytes memory domain
-    ) public view returns (bytes[] memory) {
-        uint8 M = 1;
+    ) public view returns (bytes[2] memory) {
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         bytes
             memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
+        // len_in_bytes = count * m * HTF_L
+        // so always 2 * 1 * 64 = 128
+        uint16 len_in_bytes = uint16(128);
 
-        uint16 len_in_bytes = uint16(count) * M * HTF_L; // HTF_L is 64
-
-        bytes memory pseudo_random_bytes = expand_msg_xmd(
+        bytes32[] memory pseudo_random_bytes = expand_msg_xmd(
             message,
             len_in_bytes,
             domain
         );
 
-        bytes[] memory u = new bytes[](count);
+        bytes[2] memory u;
 
-        for (uint i = 0; i < count; i++) {
-            uint256 offset = HTF_L * (i * M);
-
+        for (uint i = 0; i < 2; i++) {
             bytes memory tv = new bytes(HTF_L);
-
-            for (uint k = 0; k < HTF_L; k++) {
-                tv[k] = pseudo_random_bytes[k + offset];
-            }
+            tv = bytes.concat(
+                pseudo_random_bytes[i * 2],
+                pseudo_random_bytes[i * 2 + 1]
+            );
 
             u[i] = _modexp(tv, modulus);
         }
@@ -141,11 +133,12 @@ contract Hash_to_curve {
     //   not greater than the lesser of (255 * b_in_bytes) or 2^16-1.
 
     // len_in_bytes is supposed to be able to be bigger but for now we just use 255  to simplify the code
+    // returns bytes32[] because len_in_bytes is always a multiple of 32 in our case even 128
     function expand_msg_xmd(
         bytes calldata message,
         uint16 len_in_bytes,
         bytes memory dst
-    ) public pure returns (bytes memory) {
+    ) public pure returns (bytes32[] memory) {
         // 1.  ell = ceil(len_in_bytes / b_in_bytes)
         // 2.  ABORT if ell > 255 or len_in_bytes > 65535 or len(DST) > 255
         // b_in_bytes seems to be 32 for sha256
@@ -180,39 +173,40 @@ contract Hash_to_curve {
         // console.log("msg_prime");
         // console.logBytes(msg_prime);
 
-        bytes32[] memory b = new bytes32[](ell + 1);
+        bytes32 b_0;
+        bytes32[] memory b = new bytes32[](ell);
 
         // 7.  b_0 = H(msg_prime)
-        b[0] = sha256(msg_prime);
+        b_0 = sha256(msg_prime);
 
         // 8.  b_1 = H(b_0 || I2OSP(1, 1) || DST_prime)
-        b[1] = sha256(bytes.concat(b[0], hex"01", dst_prime));
+        b[0] = sha256(bytes.concat(b_0, hex"01", dst_prime));
         // console.log("b1");
         // console.logBytes32(b[1]);
 
-        bytes memory pseudo_random_bytes = bytes.concat(b[1]);
+        //bytes memory pseudo_random_bytes = bytes.concat(b[1]);
         // console.log("pseudo_random_bytes");
         // console.logBytes(pseudo_random_bytes);
 
         // 9.  for i in (2, ..., ell):
         for (uint8 i = 2; i <= ell; i++) {
             // 10.    b_i = H(strxor(b_0, b_(i - 1)) || I2OSP(i, 1) || DST_prime)
-            bytes memory tmp = abi.encodePacked(b[0] ^ b[i - 1], i, dst_prime);
+            bytes memory tmp = abi.encodePacked(b_0 ^ b[i - 2], i, dst_prime);
             bytes32 tmpHash = sha256(tmp);
-            b[i] = tmpHash;
+            b[i - 1] = tmpHash;
 
             // 11. uniform_bytes = b_1 || ... || b_ell
-            pseudo_random_bytes = bytes.concat(pseudo_random_bytes, tmpHash);
+            //pseudo_random_bytes = bytes.concat(pseudo_random_bytes, tmpHash);
         }
         // console.log("pseudo_random_bytes");
         // console.logBytes(pseudo_random_bytes);
 
         // 12. return substr(uniform_bytes, 0, len_in_bytes)
-        bytes memory a = new bytes(len_in_bytes);
-        for (uint i = 0; i < len_in_bytes; i++) {
-            a[i] = pseudo_random_bytes[i];
-        }
-        return a;
+        // bytes memory a = new bytes(len_in_bytes);
+        // for (uint i = 0; i < len_in_bytes; i++) {
+        //     a[i] = pseudo_random_bytes[i];
+        // }
+        return b;
     }
 
     // From https://github.com/firoorg/solidity-BigNumber/blob/master/src/BigNumbers.sol
