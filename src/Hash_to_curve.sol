@@ -78,11 +78,12 @@ contract Hash_to_curve {
             // 4.   for j in (0, ..., m - 1):
             for (uint j = 0; j < M; j++) {
                 // 5.     elm_offset = L * (j + i * m)
+                uint256 elm_offset = (j + i * M) * 2;
                 // 6.     tv = substr(uniform_bytes, elm_offset, L)
                 bytes memory tv = new bytes(HTF_L);
                 tv = bytes.concat(
-                    pseudo_random_bytes[(j + i * M) * 2],
-                    pseudo_random_bytes[(j + i * M) * 2 + 1]
+                    pseudo_random_bytes[elm_offset],
+                    pseudo_random_bytes[elm_offset + 1]
                 );
 
                 // 7.     e_j = OS2IP(tv) mod p
@@ -114,10 +115,12 @@ contract Hash_to_curve {
         bytes[2] memory u;
 
         for (uint i = 0; i < 2; i++) {
+            uint256 elm_offset = i * 2;
+
             bytes memory tv = new bytes(HTF_L);
             tv = bytes.concat(
-                pseudo_random_bytes[i * 2],
-                pseudo_random_bytes[i * 2 + 1]
+                pseudo_random_bytes[elm_offset],
+                pseudo_random_bytes[elm_offset + 1]
             );
 
             u[i] = _modexp(tv, modulus);
@@ -192,8 +195,7 @@ contract Hash_to_curve {
         for (uint8 i = 2; i <= ell; i++) {
             // 10.    b_i = H(strxor(b_0, b_(i - 1)) || I2OSP(i, 1) || DST_prime)
             bytes memory tmp = abi.encodePacked(b_0 ^ b[i - 2], i, dst_prime);
-            bytes32 tmpHash = sha256(tmp);
-            b[i - 1] = tmpHash;
+            b[i - 1] = sha256(tmp);
 
             // 11. uniform_bytes = b_1 || ... || b_ell
             //pseudo_random_bytes = bytes.concat(pseudo_random_bytes, tmpHash);
