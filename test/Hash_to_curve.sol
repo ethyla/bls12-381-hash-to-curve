@@ -110,7 +110,7 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_empty_msg() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
-        bytes[][] memory result = hasher.hash_to_field_g2("", 2, custom_dst);
+        bytes[][] memory result = hasher.hash_to_field_fp2("", 2, custom_dst);
         bytes
             memory expected00 = hex"03dbc2cce174e91ba93cbb08f26b917f98194a2ea08d1cce75b2b9cc9f21689d80bd79b594a613d0a68eb807dfdc1cf8";
         bytes
@@ -129,7 +129,11 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_msg_abc() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
-        bytes[][] memory result = hasher.hash_to_field_g2("abc", 2, custom_dst);
+        bytes[][] memory result = hasher.hash_to_field_fp2(
+            "abc",
+            2,
+            custom_dst
+        );
 
         bytes
             memory expected00 = hex"15f7c0aa8f6b296ab5ff9c2c7581ade64f4ee6f1bf18f55179ff44a2cf355fa53dd2a2158c5ecb17d7c52f63e7195771";
@@ -149,7 +153,7 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_msg_abcdef0123456789() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
-        bytes[][] memory result = hasher.hash_to_field_g2(
+        bytes[][] memory result = hasher.hash_to_field_fp2(
             "abcdef0123456789",
             2,
             custom_dst
@@ -173,7 +177,7 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_msg_q128() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
-        bytes[][] memory result = hasher.hash_to_field_g2(
+        bytes[][] memory result = hasher.hash_to_field_fp2(
             "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
             2,
             custom_dst
@@ -197,7 +201,7 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_msg_a512() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
-        bytes[][] memory result = hasher.hash_to_field_g2(
+        bytes[][] memory result = hasher.hash_to_field_fp2(
             "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             2,
             custom_dst
@@ -221,7 +225,7 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_g1_empty_msg() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
-        bytes[] memory result = hasher.hash_to_field_g1("", 2, custom_dst);
+        bytes[] memory result = hasher.hash_to_field_fp("", 2, custom_dst);
         bytes
             memory expected0 = hex"0ba14bd907ad64a016293ee7c2d276b8eae71f25a4b941eece7b0d89f17f75cb3ae5438a614fb61d6835ad59f29c564f";
         bytes
@@ -234,7 +238,7 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_g1_msg_abc() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
-        bytes[] memory result = hasher.hash_to_field_g1("abc", 2, custom_dst);
+        bytes[] memory result = hasher.hash_to_field_fp("abc", 2, custom_dst);
         bytes
             memory expected0 = hex"0d921c33f2bad966478a03ca35d05719bdf92d347557ea166e5bba579eea9b83e9afa5c088573c2281410369fbd32951";
         bytes
@@ -247,7 +251,7 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_g1_msg_abcdef0123456789() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
-        bytes[] memory result = hasher.hash_to_field_g1(
+        bytes[] memory result = hasher.hash_to_field_fp(
             "abcdef0123456789",
             2,
             custom_dst
@@ -264,7 +268,7 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_g1_msg_q128() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
-        bytes[] memory result = hasher.hash_to_field_g1(
+        bytes[] memory result = hasher.hash_to_field_fp(
             "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
             2,
             custom_dst
@@ -281,7 +285,7 @@ contract Hash_to_curveTest is Test {
     function test_hash_to_field_g1_msg_a512() public view {
         bytes
             memory custom_dst = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
-        bytes[] memory result = hasher.hash_to_field_g1(
+        bytes[] memory result = hasher.hash_to_field_fp(
             "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             2,
             custom_dst

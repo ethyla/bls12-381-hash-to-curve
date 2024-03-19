@@ -6,7 +6,6 @@ import {console} from "forge-std/Test.sol";
 contract Hash_to_curve {
     uint8 HTF_L = 64;
 
-    // end function
     // hash_to_curve(msg)
     // Input: msg, an arbitrary-length byte string.
     // Output: P, a point in G.
@@ -46,43 +45,25 @@ contract Hash_to_curve {
 
     function hash_to_curve_g2(bytes calldata message) public {}
 
-    // hash_to_field(msg, count)
-    // Parameters:
-    // - DST, a domain separation tag (see Section 3.1).
-    // - F, a finite field of characteristic p and order q = p^m.
-    // - p, the characteristic of F (see immediately above).
-    // - m, the extension degree of F, m >= 1 (see immediately above).
-    // - L = ceil((ceil(log2(p)) + k) / 8), where k is the security
-    //   parameter of the suite (e.g., k = 128).
-    // - expand_message, a function that expands a byte string and
-    //   domain separation tag into a uniformly random byte string
-    //   (see Section 5.3).
+    // https://datatracker.ietf.org/doc/html/rfc9380#section-5.2
     // Input:
     // - msg, a byte string containing the message to hash.
     // - count, the number of elements of F to output.
-    // Output:
-    // - (u_0, ..., u_(count - 1)), a list of field elements.
-    // Steps:
-    // 1. len_in_bytes = count * m * L
-    // 2. uniform_bytes = expand_message(msg, DST, len_in_bytes)
-    // 3. for i in (0, ..., count - 1):
-    // 4.   for j in (0, ..., m - 1):
-    // 5.     elm_offset = L * (j + i * m)
-    // 6.     tv = substr(uniform_bytes, elm_offset, L)
-    // 7.     e_j = OS2IP(tv) mod p
-    // 8.   u_i = (e_0, ..., e_(m - 1))
-    // 9. return (u_0, ..., u_(count - 1))
-    function hash_to_field_g2(
+    // - DST, a domain separation tag (see Section 3.1).
+    function hash_to_field_fp2(
         bytes calldata message,
         uint8 count,
         bytes memory domain
     ) public view returns (bytes[][] memory) {
         uint8 M = 2;
-        uint16 len_in_bytes = uint16(count) * M * HTF_L; // HTF_L is 64
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         bytes
             memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
 
+        // 1. len_in_bytes = count * m * L
+        uint16 len_in_bytes = uint16(count) * M * HTF_L; // HTF_L is 64
+
+        // 2. uniform_bytes = expand_message(msg, DST, len_in_bytes)
         bytes memory pseudo_random_bytes = expand_msg_xmd(
             message,
             len_in_bytes,
@@ -91,14 +72,16 @@ contract Hash_to_curve {
 
         bytes[][] memory u = new bytes[][](count);
 
+        // 3. for i in (0, ..., count - 1):
         for (uint i = 0; i < count; i++) {
             bytes[] memory e = new bytes[](M);
-
+            // 4.   for j in (0, ..., m - 1):
             for (uint j = 0; j < M; j++) {
+                // 5.     elm_offset = L * (j + i * m)
                 uint256 offset = HTF_L * (j + i * M);
 
+                // 6.     tv = substr(uniform_bytes, elm_offset, L)
                 bytes memory tv = new bytes(HTF_L);
-
                 for (uint k = 0; k < HTF_L; k++) {
                     tv[k] = pseudo_random_bytes[k + offset];
                 }
@@ -106,23 +89,27 @@ contract Hash_to_curve {
                 // console.logBytes(tv);
                 // console.logBytes(modulus);
                 // console.logBytes(_modexp(tv, one, modulus));
+                // 7.     e_j = OS2IP(tv) mod p
                 e[j] = _modexp(tv, modulus);
-                u[i] = e;
             }
+            // 8.   u_i = (e_0, ..., e_(m - 1))
+            u[i] = e;
         }
+        // 9. return (u_0, ..., u_(count - 1))
         return u;
     }
 
-    function hash_to_field_g1(
+    function hash_to_field_fp(
         bytes calldata message,
         uint8 count,
         bytes memory domain
     ) public view returns (bytes[] memory) {
         uint8 M = 1;
-        uint16 len_in_bytes = uint16(count) * M * HTF_L; // HTF_L is 64
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         bytes
             memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
+
+        uint16 len_in_bytes = uint16(count) * M * HTF_L; // HTF_L is 64
 
         bytes memory pseudo_random_bytes = expand_msg_xmd(
             message,
@@ -140,48 +127,19 @@ contract Hash_to_curve {
             for (uint k = 0; k < HTF_L; k++) {
                 tv[k] = pseudo_random_bytes[k + offset];
             }
-            // console.log("tv");
-            // console.logBytes(tv);
-            // console.logBytes(modulus);
-            // console.logBytes(_modexp(tv, one, modulus));
 
             u[i] = _modexp(tv, modulus);
         }
         return u;
     }
 
-    // expand_message_xmd(msg, DST, len_in_bytes)
-
-    // Parameters:
-    // - H, a hash function (see requirements above).
-    // - b_in_bytes, b / 8 for b the output size of H in bits.
-    //   For example, for b = 256, b_in_bytes = 32.
-    // - s_in_bytes, the input block size of H, measured in bytes (see
-    //   discussion above). For example, for SHA-256, s_in_bytes = 64.
-
+    // https://datatracker.ietf.org/doc/html/rfc9380#section-5.2
     // Input:
     // - msg, a byte string.
     // - DST, a byte string of at most 255 bytes.
-    //   See below for information on using longer DSTs.
     // - len_in_bytes, the length of the requested output in bytes,
     //   not greater than the lesser of (255 * b_in_bytes) or 2^16-1.
 
-    // Output:
-    // - uniform_bytes, a byte string.
-
-    // Steps:
-    // 1.  ell = ceil(len_in_bytes / b_in_bytes)
-    // 2.  ABORT if ell > 255 or len_in_bytes > 65535 or len(DST) > 255
-    // 3.  DST_prime = DST || I2OSP(len(DST), 1)
-    // 4.  Z_pad = I2OSP(0, s_in_bytes)
-    // 5.  l_i_b_str = I2OSP(len_in_bytes, 2)
-    // 6.  msg_prime = Z_pad || msg || l_i_b_str || I2OSP(0, 1) || DST_prime
-    // 7.  b_0 = H(msg_prime)
-    // 8.  b_1 = H(b_0 || I2OSP(1, 1) || DST_prime)
-    // 9.  for i in (2, ..., ell):
-    // 10.    b_i = H(strxor(b_0, b_(i - 1)) || I2OSP(i, 1) || DST_prime)
-    // 11. uniform_bytes = b_1 || ... || b_ell
-    // 12. return substr(uniform_bytes, 0, len_in_bytes)
     // len_in_bytes is supposed to be able to be bigger but for now we just use 255  to simplify the code
     function expand_msg_xmd(
         bytes calldata message,
