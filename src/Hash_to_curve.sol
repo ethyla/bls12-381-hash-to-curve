@@ -4,8 +4,6 @@ pragma solidity ^0.8.13;
 import {console} from "forge-std/Test.sol";
 
 contract Hash_to_curve {
-    uint8 HTF_L = 64;
-
     // hash_to_curve(msg)
     // Input: msg, an arbitrary-length byte string.
     // Output: P, a point in G.
@@ -55,14 +53,14 @@ contract Hash_to_curve {
         bytes calldata message,
         bytes memory domain
     ) public view returns (bytes[2][2] memory) {
-        uint8 M = 2;
+        //uint8 M = 2;
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         bytes
             memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
 
         // 1. len_in_bytes = count * m * L
         // so always 2 * 2 * 64 = 256
-        uint16 len_in_bytes = uint16(256);
+        uint16 len_in_bytes = 256;
 
         // 2. uniform_bytes = expand_message(msg, DST, len_in_bytes)
         bytes32[] memory pseudo_random_bytes = expand_msg_xmd(
@@ -76,11 +74,12 @@ contract Hash_to_curve {
         // 3. for i in (0, ..., count - 1):
         for (uint i = 0; i < 2; i++) {
             // 4.   for j in (0, ..., m - 1):
-            for (uint j = 0; j < M; j++) {
+            for (uint j = 0; j < 2; j++) {
                 // 5.     elm_offset = L * (j + i * m)
-                uint256 elm_offset = (j + i * M) * 2;
+                uint256 elm_offset = (j + i * 2) * 2;
                 // 6.     tv = substr(uniform_bytes, elm_offset, L)
-                bytes memory tv = new bytes(HTF_L);
+                //uint8 HTF_L = 64;
+                bytes memory tv = new bytes(64);
                 tv = bytes.concat(
                     pseudo_random_bytes[elm_offset],
                     pseudo_random_bytes[elm_offset + 1]
@@ -104,7 +103,7 @@ contract Hash_to_curve {
             memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
         // len_in_bytes = count * m * HTF_L
         // so always 2 * 1 * 64 = 128
-        uint16 len_in_bytes = uint16(128);
+        uint16 len_in_bytes = 128;
 
         bytes32[] memory pseudo_random_bytes = expand_msg_xmd(
             message,
@@ -116,8 +115,8 @@ contract Hash_to_curve {
 
         for (uint i = 0; i < 2; i++) {
             uint256 elm_offset = i * 2;
-
-            bytes memory tv = new bytes(HTF_L);
+            // uint8 HTF_L = 64;
+            bytes memory tv = new bytes(64);
             tv = bytes.concat(
                 pseudo_random_bytes[elm_offset],
                 pseudo_random_bytes[elm_offset + 1]
