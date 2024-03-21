@@ -5,7 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {Hash_to_curve} from "../src/Hash_to_curve.sol";
 
 contract Hash_to_curveTest is Test {
-    bytes expand_msg_DST = "QUUX-V01-CS02-with-expander";
+    bytes expand_msg_DST = "QUUX-V01-CS02-with-expander-SHA256-128";
     bytes hash_to_G2_DST = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
     bytes hash_to_G1_DST = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
 
@@ -15,7 +15,8 @@ contract Hash_to_curveTest is Test {
         hasher = new Hash_to_curve();
     }
 
-    // test cases from https://github.com/ethereum/py_ecc/blob/main/tests/bls/test_expand_message_xmd.py
+    //test cases from:
+    //https://datatracker.ietf.org/doc/html/rfc9380#name-expand_message_xmdsha-256
     function test_expand_msg_xmd_empty_msg_0x20() public view {
         bytes32[] memory result = hasher.expand_msg_xmd(
             "",
@@ -23,7 +24,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"f659819a6473c1835b25ea59e3d38914c98b374f0970b7e4c92181df928fca88";
+            memory expected = hex"68a985b87eb6b46952128911f2a4412bbc302a9d759667f87f7a21d803f07235";
 
         assertEq(bytes.concat(result[0]), expected);
     }
@@ -35,7 +36,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"1c38f7c211ef233367b2420d04798fa4698080a8901021a795a1151775fe4da7";
+            memory expected = hex"d8ccab23b5985ccea865c6c97b6e5b8350e794e603b4b97902f53a8a0d605615";
 
         assertEq(bytes.concat(result[0]), expected);
     }
@@ -47,7 +48,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"8f7e7b66791f0da0dbb5ec7c22ec637f79758c0a48170bfb7c4611bd304ece89";
+            memory expected = hex"eff31487c770a893cfb36f912fbfcbff40d5661771ca4b2cb4eafe524333f5c1";
 
         assertEq(bytes.concat(result[0]), expected);
     }
@@ -59,7 +60,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"72d5aa5ec810370d1f0013c0df2f1d65699494ee2a39f72e1716b1b964e1c642";
+            memory expected = hex"b23a1d2b4d97b2ef7785562a7e8bac7eed54ed6e97e29aa51bfe3f12ddad1ff9";
 
         assertEq(bytes.concat(result[0]), expected);
     }
@@ -71,7 +72,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"3b8e704fc48336aca4c2a12195b720882f2162a4b7b13a9c350db46f429b771b";
+            memory expected = hex"4623227bcc01293b8c130bf771da8c298dede7383243dc0993d2d94823958c4c";
 
         assertEq(bytes.concat(result[0]), expected);
     }
@@ -83,7 +84,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"8bcffd1a3cae24cf9cd7ab85628fd111bb17e3739d3b53f89580d217aa79526f1708354a76a402d3569d6a9d19ef3de4d0b991e4f54b9f20dcde9b95a66824cbdf6c1a963a1913d43fd7ac443a02fc5d9d8d77e2071b86ab114a9f34150954a7531da568a1ea8c760861c0cde2005afc2c114042ee7b5848f5303f0611cf297f";
+            memory expected = hex"af84c27ccfd45d41914fdff5df25293e221afc53d8ad2ac06d5e3e29485dadbee0d121587713a3e0dd4d5e69e93eb7cd4f5df4cd103e188cf60cb02edc3edf18eda8576c412b18ffb658e3dd6ec849469b979d444cf7b26911a08e63cf31f9dcc541708d3491184472c2c29bb749d4286b004ceb5ee6b9a7fa5b646c993f0ced";
 
         assertEq(
             bytes.concat(result[0], result[1], result[2], result[3]),
@@ -98,7 +99,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"fe994ec51bdaa821598047b3121c149b364b178606d5e72bfbb713933acc29c186f316baecf7ea22212f2496ef3f785a27e84a40d8b299cec56032763eceeff4c61bd1fe65ed81decafff4a31d0198619c0aa0c6c51fca15520789925e813dcfd318b542f8799441271f4db9ee3b8092a7a2e8d5b75b73e28fb1ab6b4573c192";
+            memory expected = hex"abba86a6129e366fc877aab32fc4ffc70120d8996c88aee2fe4b32d6c7b6437a647e6c3163d40b76a73cf6a5674ef1d890f95b664ee0afa5359a5c4e07985635bbecbac65d747d3d2da7ec2b8221b17b0ca9dc8a1ac1c07ea6a1e60583e2cb00058e77b7b72a298425cd1b941ad4ec65e8afc50303a22c0f99b0509b4c895f40";
 
         assertEq(
             bytes.concat(result[0], result[1], result[2], result[3]),
@@ -113,7 +114,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"c9ec7941811b1e19ce98e21db28d22259354d4d0643e301175e2f474e030d32694e9dd5520dde93f3600d8edad94e5c364903088a7228cc9eff685d7eaac50d5a5a8229d083b51de4ccc3733917f4b9535a819b445814890b7029b5de805bf62b33a4dc7e24acdf2c924e9fe50d55a6b832c8c84c7f82474b34e48c6d43867be";
+            memory expected = hex"ef904a29bffc4cf9ee82832451c946ac3c8f8058ae97d8d629831a74c6572bd9ebd0df635cd1f208e2038e760c4994984ce73f0d55ea9f22af83ba4734569d4bc95e18350f740c07eef653cbb9f87910d833751825f0ebefa1abe5420bb52be14cf489b37fe1a72f7de2d10be453b2c9d9eb20c7e3f6edc5a60629178d9478df";
 
         assertEq(
             bytes.concat(result[0], result[1], result[2], result[3]),
@@ -128,7 +129,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"48e256ddba722053ba462b2b93351fc966026e6d6db493189798181c5f3feea377b5a6f1d8368d7453faef715f9aecb078cd402cbd548c0e179c4ed1e4c7e5b048e0a39d31817b5b24f50db58bb3720fe96ba53db947842120a068816ac05c159bb5266c63658b4f000cbf87b1209a225def8ef1dca917bcda79a1e42acd8069";
+            memory expected = hex"80be107d0884f0d881bb460322f0443d38bd222db8bd0b0a5312a6fedb49c1bbd88fd75d8b9a09486c60123dfa1d73c1cc3169761b17476d3c6b7cbbd727acd0e2c942f4dd96ae3da5de368d26b32286e32de7e5a8cb2949f866a0b80c58116b29fa7fabb3ea7d520ee603e0c25bcaf0b9a5e92ec6a1fe4e0391d1cdbce8c68a";
 
         assertEq(
             bytes.concat(result[0], result[1], result[2], result[3]),
@@ -143,7 +144,7 @@ contract Hash_to_curveTest is Test {
             expand_msg_DST
         );
         bytes
-            memory expected = hex"396962db47f749ec3b5042ce2452b619607f27fd3939ece2746a7614fb83a1d097f554df3927b084e55de92c7871430d6b95c2a13896d8a33bc48587b1f66d21b128a1a8240d5b0c26dfe795a1a842a0807bb148b77c2ef82ed4b6c9f7fcb732e7f94466c8b51e52bf378fba044a31f5cb44583a892f5969dcd73b3fa128816e";
+            memory expected = hex"546aff5444b5b79aa6148bd81728704c32decb73a3ba76e9e75885cad9def1d06d6792f8a7d12794e90efed817d96920d728896a4510864370c207f99bd4a608ea121700ef01ed879745ee3e4ceef777eda6d9e5e38b90c86ea6fb0b36504ba4a45d22e86f6db5dd43d98a294bebb9125d5b794e9d2a81181066eb954966a487";
 
         assertEq(
             bytes.concat(result[0], result[1], result[2], result[3]),
