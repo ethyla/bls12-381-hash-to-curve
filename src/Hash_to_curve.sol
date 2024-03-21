@@ -13,9 +13,16 @@ contract Hash_to_curve {
     // 3. Q1 = map_to_curve(u[1])
     // 4. R = Q0 + Q1              # Point addition
     // 5. P = clear_cofactor(R)
-    // 6. return P
-    function hash_to_curve_g1(bytes calldata message) public {}
+    // todo: look into https://datatracker.ietf.org/doc/html/rfc9380#name-cofactor-clearing-for-bls12
 
+    // clear_cofactor(P) := h_eff * P
+    // 6. return P
+    function hash_to_curve_g1(
+        bytes calldata message
+    ) public view returns (bytes[2] memory) {}
+
+    //h_eff 0xd201000000010001
+    //dst     = QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_
     // Notes:
     // abi for the precompiles is bytes32 concats, so like this bytes32[4] for two points or a G2 point
     // so no length or anything. For reference a base field point is bytes32[2] (G1) and two points in the quadratic field are bytes32[8] or 256 bytes
@@ -41,7 +48,12 @@ contract Hash_to_curve {
     // g1 total cost: 23600             current hash to field ca 30500 so total ca: 54100
     // g2 total cost: 179500            current hash to field ca 49000 so total ca: 228500
 
-    function hash_to_curve_g2(bytes calldata message) public {}
+    function hash_to_curve_g2(
+        bytes calldata message
+    ) public view returns (bytes[4] memory) {}
+
+    // h_eff 0xbc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551
+    //dst     = QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_
 
     // https://datatracker.ietf.org/doc/html/rfc9380#section-5.2
     // Input:
