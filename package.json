@@ -1,0 +1,20 @@
+{
+  "name": "bls381-hash-to-curve",
+  "version": "1.0.0",
+  "description": "Solidity implementation of hash to curve for the BLS381 curve.",
+  "main": "index.js",
+  "type": "commonjs",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.1",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+  }
+}
