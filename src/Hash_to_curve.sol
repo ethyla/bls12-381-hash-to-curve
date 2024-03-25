@@ -4,6 +4,30 @@ pragma solidity ^0.8.13;
 import {console} from "forge-std/Test.sol";
 
 contract Hash_to_curve {
+    struct Field_point {
+        bytes32[2] u_0;
+        bytes32[2] u_1;
+    }
+
+    struct Field_point_2 {
+        bytes32[2] u_0;
+        bytes32[2] u_0_I;
+        bytes32[2] u_1;
+        bytes32[2] u_1_I;
+    }
+
+    struct G1_point {
+        bytes32[2] x;
+        bytes32[2] y;
+    }
+
+    struct G2_point {
+        bytes32[2] x;
+        bytes32[2] x_I;
+        bytes32[2] y;
+        bytes32[2] y_I;
+    }
+
     // Input: msg, an arbitrary-length byte string.
     // Output: P, a point in G.
     function hash_to_curve_g1(
