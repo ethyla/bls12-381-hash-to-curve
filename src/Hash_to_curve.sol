@@ -4,25 +4,192 @@ pragma solidity ^0.8.13;
 import {console} from "forge-std/Test.sol";
 
 contract Hash_to_curve {
-    // hash_to_curve(msg)
     // Input: msg, an arbitrary-length byte string.
     // Output: P, a point in G.
-    // Steps:
-    // 1. u = hash_to_field(msg, 2)
-    // 2. Q0 = map_to_curve(u[0])
-    // 3. Q1 = map_to_curve(u[1])
-    // 4. R = Q0 + Q1              # Point addition
-    // 5. P = clear_cofactor(R)
-    // todo: look into https://datatracker.ietf.org/doc/html/rfc9380#name-cofactor-clearing-for-bls12
-
-    // clear_cofactor(P) := h_eff * P
-    // 6. return P
     function hash_to_curve_g1(
         bytes calldata message
-    ) public view returns (bytes[2] memory) {}
+    ) public view returns (bytes32[4] memory) {
+        // 1. u = hash_to_field(msg, 2)
+        bytes[2] memory u = hash_to_field_fp(
+            message,
+            "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_"
+        );
+        // 2. Q0 = map_to_curve(u[0])
+        //bytes32[4] memory Q0 = map_fp_to_g1(u[0]);
+        // 3. Q1 = map_to_curve(u[1])
+        //bytes32[4] memory Q1 = map_fp_to_g1(u[1]);
+        // 4. R = Q0 + Q1              # Point addition
+        //bytes32[4] memory R = add_g1(Q0, Q1);
+        // 5. P = clear_cofactor(R)
+        //bytes32[4] memory P = clear_cofactor_g1(R);
+        // 6. return P
+        //return P;
+    }
 
-    //h_eff 0xd201000000010001
-    //dst     = QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_
+    // clear_cofactor(P) := h_eff * P
+    function clear_cofactor_g1(
+        bytes32[4] memory point1
+    ) public view returns (bytes32[4] memory) {
+        uint256 h_eff = 0xd201000000010001;
+        bytes memory input = abi.encodePacked(point1, h_eff);
+        bytes32[4] memory r;
+
+        assembly {
+            let success := staticcall(
+                100000, /// gas should be 12000
+                0x0b, // address of BLS12_G1MUL
+                input, //input offset
+                add(128, 32), // input size
+                r, // output offset
+                128 // output size
+            )
+            switch success
+            case 0 {
+                invalid()
+            } //fail where we haven't enough gas to make the call
+        }
+
+        return r;
+    }
+
+    //     ABI for G2 multiplication
+    // G2 multiplication call expects 288 bytes as an input that is interpreted as byte concatenation of encoding of G2 point (256 bytes) and encoding of a scalar value (32 bytes). Output is an encoding of multiplication operation result - single G2 point (256 bytes).
+    // Error cases:
+    //     Point being not on the curve must result in error
+    //     Field elements encoding rules apply (obviously)
+    //     Input has invalid length
+
+    // h_eff 0xbc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551
+    // todo: look into https://datatracker.ietf.org/doc/html/rfc9380#name-cofactor-clearing-for-bls12
+    // because just a scalar multi is not gonna work, abi of precompile doesn't support scalars bigger than 32bytes
+    function clear_cofactor_g2(
+        bytes32[8] memory point1
+    ) public view returns (bytes32[8] memory) {}
+
+    //    ABI for G1 addition
+    // G1 addition call expects 256 bytes as an input that is interpreted as byte concatenation of two G1 points (128 bytes each). Output is an encoding of addition operation result - single G1 point (128 bytes).
+    // Error cases:
+    //     Either of points being not on the curve must result in error
+    //     Field elements encoding rules apply (obviously)
+    //     Input has invalid length
+    function add_g1(
+        bytes32[4] memory point1,
+        bytes32[4] memory point2
+    ) public view returns (bytes32[4] memory) {
+        bytes memory input = abi.encodePacked(point1, point2);
+
+        bytes32[4] memory r;
+
+        assembly {
+            let success := staticcall(
+                100000, /// gas should be 600
+                0x0a, // address of BLS12_G1ADD
+                input, //input offset
+                256, // input size
+                r, // output offset
+                128 // output size
+            )
+            switch success
+            case 0 {
+                invalid()
+            } //fail where we haven't enough gas to make the call
+        }
+
+        return r;
+    }
+
+    // ABI for G2 addition
+    // G2 addition call expects 512 bytes as an input that is interpreted as byte concatenation of two G2 points (256 bytes each). Output is an encoding of addition operation result - single G2 point (256 bytes).
+    // Error cases:
+    //     Either of points being not on the curve must result in error
+    //     Field elements encoding rules apply (obviously)
+    //     Input has invalid length
+    function add_g2(
+        bytes32[8] memory point1,
+        bytes32[8] memory point2
+    ) public view returns (bytes32[8] memory) {
+        bytes memory input = abi.encodePacked(point1, point2);
+
+        bytes32[8] memory r;
+
+        assembly {
+            let success := staticcall(
+                100000, /// gas should be 4500
+                0x0d, // address of BLS12_G2ADD
+                input, //input offset
+                512, // input size
+                r, // output offset
+                256 // output size
+            )
+            switch success
+            case 0 {
+                invalid()
+            } //fail where we haven't enough gas to make the call
+        }
+
+        return r;
+    }
+
+    // ABI for mapping Fp element to G1 point
+    // Field-to-curve call expects 64 bytes an an input that is interpreted as a an element of the base field. Output of this call is 128 bytes and is G1 point following respective encoding rules.
+    // Error cases:
+    //     Input has invalid length
+    //     Input is not a valid field element
+    function map_fp_to_g1(
+        bytes32[2] memory fp
+    ) public view returns (bytes32[4] memory) {
+        bytes memory input = abi.encodePacked(fp);
+
+        bytes32[4] memory r;
+
+        assembly {
+            let success := staticcall(
+                100000, /// gas should be 5500
+                0x11, // address of BLS12_MAP_FP_TO_G1
+                input, //input offset
+                64, // input size
+                r, // output offset
+                128 // output size
+            )
+            switch success
+            case 0 {
+                invalid()
+            } //fail where we haven't enough gas to make the call
+        }
+
+        return r;
+    }
+
+    // ABI for mapping Fp2 element to G2 point
+    // Field-to-curve call expects 128 bytes an an input that is interpreted as a an element of the quadratic extension field. Output of this call is 256 bytes and is G2 point following respective encoding rules.
+    // Error cases:
+    //     Input has invalid length
+    //     Input is not a valid field element
+    function map_fp2_to_g2(
+        bytes32[4] memory fp2
+    ) public view returns (bytes32[8] memory) {
+        bytes memory input = abi.encodePacked(fp2);
+
+        bytes32[8] memory r;
+
+        assembly {
+            let success := staticcall(
+                200000, /// gas should be 110000
+                0x12, // address of BLS12_MAP_FP2_TO_G2
+                input, //input offset
+                128, // input size
+                r, // output offset
+                256 // output size
+            )
+            switch success
+            case 0 {
+                invalid()
+            } //fail where we haven't enough gas to make the call
+        }
+
+        return r;
+    }
+
     // Notes:
     // abi for the precompiles is bytes32 concats, so like this bytes32[4] for two points or a G2 point
     // so no length or anything. For reference a base field point is bytes32[2] (G1) and two points in the quadratic field are bytes32[8] or 256 bytes
@@ -31,29 +198,26 @@ contract Hash_to_curve {
     // map to curve g1 takes a 64 bytes field element
     // map to curve g2 takes a 128 bytes field element
     // all operations return a single point either G1 or G2 so either 128 or 256 bytes
-    // costs
-    // G1 addition
-    // 600 gas
-    // G1 multiplication
-    // 12000 gas
-    // G2 addition
-    // 4500 gas
-    // G2 multiplication
-    // 55000 gas
-    // Fp-to-G1 mappign operation
-    // Fp -> G1 mapping is 5500 gas.
-    // Fp2-to-G2 mappign operation
-    // Fp2 -> G2 mapping is 110000 gas
-    // it seems we will need each of these operations exactly once (map is used 2 times)
-    // g1 total cost: 23600             current hash to field ca 30500 so total ca: 54100
-    // g2 total cost: 179500            current hash to field ca 49000 so total ca: 228500
 
     function hash_to_curve_g2(
         bytes calldata message
-    ) public view returns (bytes[4] memory) {}
-
-    // h_eff 0xbc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551
-    //dst     = QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_
+    ) public view returns (bytes32[8] memory) {
+        // 1. u = hash_to_field(msg, 2)
+        bytes[2] memory u = hash_to_field_fp(
+            message,
+            "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_"
+        );
+        // 2. Q0 = map_to_curve(u[0])
+        //bytes32[8] memory Q0 = map_fp2_to_g2(u[0]);
+        // 3. Q1 = map_to_curve(u[1])
+        //bytes32[8] memory Q1 = map_fp2_to_g2(u[1]);
+        // 4. R = Q0 + Q1              # Point addition
+        //bytes32[8] memory R = add_g2(Q0, Q1);
+        // 5. P = clear_cofactor(R)
+        //bytes32[8] memory P = clear_cofactor_g2(R);
+        // 6. return P
+        //return P;
+    }
 
     // https://datatracker.ietf.org/doc/html/rfc9380#section-5.2
     // Input:
