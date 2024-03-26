@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Hash_to_curve} from "../src/Hash_to_curve.sol";
+import {Hash_to_curve, G1_point, G2_point} from "../src/Hash_to_curve.sol";
 
 contract Hash_to_curve_Test is Test {
     bytes expand_msg_DST = "QUUX-V01-CS02-with-expander-SHA256-128";
@@ -19,40 +19,40 @@ contract Hash_to_curve_Test is Test {
     //https://datatracker.ietf.org/doc/html/rfc9380#name-bls12381g1_xmdsha-256_sswu_
     //https://datatracker.ietf.org/doc/html/rfc9380#name-bls12381g2_xmdsha-256_sswu_
     function test_hash_to_curve_g1_empty_msg() public view {
-        bytes[2] memory result = hasher.hash_to_curve_g1("");
+        G1_point memory result = hasher.hash_to_curve_g1("");
         bytes
             memory expected_P_x = hex"052926add2207b76ca4fa57a8734416c8dc95e24501772c814278700eed6d1e4e8cf62d9c09db0fac349612b759e79a1";
         bytes
             memory expected_P_y = hex"08ba738453bfed09cb546dbb0783dbb3a5f1f566ed67bb6be0e8c67e2e81a4cc68ee29813bb7994998f3eae0c9c6a265";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_y);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.y, expected_P_y);
     }
 
     function test_hash_to_curve_g1_msg_abc() public view {
-        bytes[2] memory result = hasher.hash_to_curve_g1("abc");
+        G1_point memory result = hasher.hash_to_curve_g1("abc");
         bytes
             memory expected_P_x = hex"03567bc5ef9c690c2ab2ecdf6a96ef1c139cc0b2f284dca0a9a7943388a49a3aee664ba5379a7655d3c68900be2f6903";
         bytes
             memory expected_P_y = hex"0b9c15f3fe6e5cf4211f346271d7b01c8f3b28be689c8429c85b67af215533311f0b8dfaaa154fa6b88176c229f2885d";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_y);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.y, expected_P_y);
     }
 
     function test_hash_to_curve_g1_msg_abcdef0123456789() public view {
-        bytes[2] memory result = hasher.hash_to_curve_g1("abcdef0123456789");
+        G1_point memory result = hasher.hash_to_curve_g1("abcdef0123456789");
         bytes
-            memory expected_P_x = hex"11e0b079dea29a68f0383ee94fed1b940995272407e3bb916bbf268c263ddd57a6a27200a784cbc248e84f357ce82d98";
+            memory expected_P_x = hex"0000000000000000000000000000000011e0b079dea29a68f0383ee94fed1b940995272407e3bb916bbf268c263ddd57a6a27200a784cbc248e84f357ce82d98";
         bytes
-            memory expected_P_y = hex"03a87ae2caf14e8ee52e51fa2ed8eefe80f02457004ba4d486d6aa1f517c0889501dc7413753f9599b099ebcbbd2d709";
+            memory expected_P_y = hex"0000000000000000000000000000000003a87ae2caf14e8ee52e51fa2ed8eefe80f02457004ba4d486d6aa1f517c0889501dc7413753f9599b099ebcbbd2d709";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_y);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.y, expected_P_y);
     }
 
     function test_hash_to_curve_g1_msg_q128() public view {
-        bytes[2] memory result = hasher.hash_to_curve_g1(
+        G1_point memory result = hasher.hash_to_curve_g1(
             "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
         );
         bytes
@@ -60,12 +60,12 @@ contract Hash_to_curve_Test is Test {
         bytes
             memory expected_P_y = hex"1807a1d50c29f430b8cafc4f8638dfeeadf51211e1602a5f184443076715f91bb90a48ba1e370edce6ae1062f5e6dd38";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_y);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.y, expected_P_y);
     }
 
     function test_hash_to_curve_g1_msg_a512() public view {
-        bytes[2] memory result = hasher.hash_to_curve_g1(
+        G1_point memory result = hasher.hash_to_curve_g1(
             "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         );
         bytes
@@ -73,12 +73,12 @@ contract Hash_to_curve_Test is Test {
         bytes
             memory expected_P_y = hex"05b84ae5a942248eea39e1d91030458c40153f3b654ab7872d779ad1e942856a20c438e8d99bc8abfbf74729ce1f7ac8";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_y);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.y, expected_P_y);
     }
 
     function test_hash_to_curve_g2_empty_msg() public view {
-        bytes[4] memory result = hasher.hash_to_curve_g2("");
+        G2_point memory result = hasher.hash_to_curve_g2("");
         bytes
             memory expected_P_x = hex"0141ebfbdca40eb85b87142e130ab689c673cf60f1a3e98d69335266f30d9b8d4ac44c1038e9dcdd5393faf5c41fb78a";
         bytes
@@ -88,14 +88,14 @@ contract Hash_to_curve_Test is Test {
         bytes
             memory expected_P_y_I = hex"12424ac32561493f3fe3c260708a12b7c620e7be00099a974e259ddc7d1f6395c3c811cdd19f1e8dbf3e9ecfdcbab8d6";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_x_I);
-        assertEq(result[2], expected_P_y);
-        assertEq(result[3], expected_P_y_I);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.x_I, expected_P_x_I);
+        assertEq(result.y, expected_P_y);
+        assertEq(result.y_I, expected_P_y_I);
     }
 
     function test_hash_to_curve_g2_msg_abc() public view {
-        bytes[4] memory result = hasher.hash_to_curve_g2("abc");
+        G2_point memory result = hasher.hash_to_curve_g2("abc");
         bytes
             memory expected_P_x = hex"02c2d18e033b960562aae3cab37a27ce00d80ccd5ba4b7fe0e7a210245129dbec7780ccc7954725f4168aff2787776e6";
         bytes
@@ -105,14 +105,14 @@ contract Hash_to_curve_Test is Test {
         bytes
             memory expected_P_y_I = hex"00aa65dae3c8d732d10ecd2c50f8a1baf3001578f71c694e03866e9f3d49ac1e1ce70dd94a733534f106d4cec0eddd16";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_x_I);
-        assertEq(result[2], expected_P_y);
-        assertEq(result[3], expected_P_y_I);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.x_I, expected_P_x_I);
+        assertEq(result.y, expected_P_y);
+        assertEq(result.y_I, expected_P_y_I);
     }
 
     function test_hash_to_curve_g2_msg_abcdef0123456789() public view {
-        bytes[4] memory result = hasher.hash_to_curve_g2("abcdef0123456789");
+        G2_point memory result = hasher.hash_to_curve_g2("abcdef0123456789");
         bytes
             memory expected_P_x = hex"121982811d2491fde9ba7ed31ef9ca474f0e1501297f68c298e9f4c0028add35aea8bb83d53c08cfc007c1e005723cd0";
         bytes
@@ -122,14 +122,14 @@ contract Hash_to_curve_Test is Test {
         bytes
             memory expected_P_y_I = hex"0bb5e7572275c567462d91807de765611490205a941a5a6af3b1691bfe596c31225d3aabdf15faff860cb4ef17c7c3be";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_x_I);
-        assertEq(result[2], expected_P_y);
-        assertEq(result[3], expected_P_y_I);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.x_I, expected_P_x_I);
+        assertEq(result.y, expected_P_y);
+        assertEq(result.y_I, expected_P_y_I);
     }
 
     function test_hash_to_curve_g2_msg_q128() public view {
-        bytes[4] memory result = hasher.hash_to_curve_g2(
+        G2_point memory result = hasher.hash_to_curve_g2(
             "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
         );
         bytes
@@ -141,14 +141,14 @@ contract Hash_to_curve_Test is Test {
         bytes
             memory expected_P_y_I = hex"09bcccfa036b4847c9950780733633f13619994394c23ff0b32fa6b795844f4a0673e20282d07bc69641cee04f5e5662";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_x_I);
-        assertEq(result[2], expected_P_y);
-        assertEq(result[3], expected_P_y_I);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.x_I, expected_P_x_I);
+        assertEq(result.y, expected_P_y);
+        assertEq(result.y_I, expected_P_y_I);
     }
 
     function test_hash_to_curve_g2_msg_a512() public view {
-        bytes[4] memory result = hasher.hash_to_curve_g2(
+        G2_point memory result = hasher.hash_to_curve_g2(
             "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         );
         bytes
@@ -160,9 +160,9 @@ contract Hash_to_curve_Test is Test {
         bytes
             memory expected_P_y_I = hex"03a47f8e6d1763ba0cad63d6114c0accbef65707825a511b251a660a9b3994249ae4e63fac38b23da0c398689ee2ab52";
 
-        assertEq(result[0], expected_P_x);
-        assertEq(result[1], expected_P_x_I);
-        assertEq(result[2], expected_P_y);
-        assertEq(result[3], expected_P_y_I);
+        assertEq(result.x, expected_P_x);
+        assertEq(result.x_I, expected_P_x_I);
+        assertEq(result.y, expected_P_y);
+        assertEq(result.y_I, expected_P_y_I);
     }
 }

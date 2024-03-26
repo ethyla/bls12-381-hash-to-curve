@@ -3,59 +3,56 @@ pragma solidity ^0.8.13;
 
 import {console} from "forge-std/Test.sol";
 
+struct Field_point {
+    bytes u;
+}
+
+struct Field_point_2 {
+    bytes u;
+    bytes u_I;
+}
+
+struct G1_point {
+    bytes x;
+    bytes y;
+}
+
+struct G2_point {
+    bytes x;
+    bytes x_I;
+    bytes y;
+    bytes y_I;
+}
+
 contract Hash_to_curve {
-    struct Field_point {
-        bytes32[2] u_0;
-        bytes32[2] u_1;
-    }
-
-    struct Field_point_2 {
-        bytes32[2] u_0;
-        bytes32[2] u_0_I;
-        bytes32[2] u_1;
-        bytes32[2] u_1_I;
-    }
-
-    struct G1_point {
-        bytes32[2] x;
-        bytes32[2] y;
-    }
-
-    struct G2_point {
-        bytes32[2] x;
-        bytes32[2] x_I;
-        bytes32[2] y;
-        bytes32[2] y_I;
-    }
-
     // Input: msg, an arbitrary-length byte string.
     // Output: P, a point in G.
     function hash_to_curve_g1(
         bytes calldata message
-    ) public view returns (bytes32[4] memory) {
+    ) public view returns (G1_point memory) {
         // 1. u = hash_to_field(msg, 2)
-        bytes[2] memory u = hash_to_field_fp(
+        Field_point[2] memory u = hash_to_field_fp(
             message,
             "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_"
         );
         // 2. Q0 = map_to_curve(u[0])
-        //bytes32[4] memory Q0 = map_fp_to_g1(u[0]);
+        G1_point memory Q0 = map_fp_to_g1(u[0]);
         // 3. Q1 = map_to_curve(u[1])
-        //bytes32[4] memory Q1 = map_fp_to_g1(u[1]);
+        G1_point memory Q1 = map_fp_to_g1(u[1]);
         // 4. R = Q0 + Q1              # Point addition
-        //bytes32[4] memory R = add_g1(Q0, Q1);
+        G1_point memory R = add_g1(Q0, Q1);
         // 5. P = clear_cofactor(R)
-        //bytes32[4] memory P = clear_cofactor_g1(R);
+        G1_point memory P = clear_cofactor_g1(R);
         // 6. return P
-        //return P;
+        return P;
     }
 
     // clear_cofactor(P) := h_eff * P
     function clear_cofactor_g1(
-        bytes32[4] memory point1
-    ) public view returns (bytes32[4] memory) {
+        G1_point memory point1
+    ) public view returns (G1_point memory) {
         uint256 h_eff = 0xd201000000010001;
-        bytes memory input = abi.encodePacked(point1, h_eff);
+        bytes memory input = abi.encodePacked(point1.x, point1.y, h_eff);
         bytes32[4] memory r;
 
         assembly {
@@ -73,7 +70,12 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        return r;
+        G1_point memory P = G1_point({
+            x: bytes.concat(r[0], r[1]),
+            y: bytes.concat(r[2], r[3])
+        });
+
+        return P;
     }
 
     //     ABI for G2 multiplication
@@ -87,8 +89,8 @@ contract Hash_to_curve {
     // todo: look into https://datatracker.ietf.org/doc/html/rfc9380#name-cofactor-clearing-for-bls12
     // because just a scalar multi is not gonna work, abi of precompile doesn't support scalars bigger than 32bytes
     function clear_cofactor_g2(
-        bytes32[8] memory point1
-    ) public view returns (bytes32[8] memory) {}
+        G2_point memory point1
+    ) public view returns (G2_point memory) {}
 
     //    ABI for G1 addition
     // G1 addition call expects 256 bytes as an input that is interpreted as byte concatenation of two G1 points (128 bytes each). Output is an encoding of addition operation result - single G1 point (128 bytes).
@@ -97,10 +99,15 @@ contract Hash_to_curve {
     //     Field elements encoding rules apply (obviously)
     //     Input has invalid length
     function add_g1(
-        bytes32[4] memory point1,
-        bytes32[4] memory point2
-    ) public view returns (bytes32[4] memory) {
-        bytes memory input = abi.encodePacked(point1, point2);
+        G1_point memory point1,
+        G1_point memory point2
+    ) public view returns (G1_point memory) {
+        bytes memory input = abi.encodePacked(
+            point1.x,
+            point1.y,
+            point2.x,
+            point2.y
+        );
 
         bytes32[4] memory r;
 
@@ -119,7 +126,11 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        return r;
+        G1_point memory P = G1_point({
+            x: bytes.concat(r[0], r[1]),
+            y: bytes.concat(r[2], r[3])
+        });
+        return P;
     }
 
     // ABI for G2 addition
@@ -129,10 +140,19 @@ contract Hash_to_curve {
     //     Field elements encoding rules apply (obviously)
     //     Input has invalid length
     function add_g2(
-        bytes32[8] memory point1,
-        bytes32[8] memory point2
-    ) public view returns (bytes32[8] memory) {
-        bytes memory input = abi.encodePacked(point1, point2);
+        G2_point memory point1,
+        G2_point memory point2
+    ) public view returns (G2_point memory) {
+        bytes memory input = abi.encodePacked(
+            point1.x,
+            point1.x_I,
+            point1.y,
+            point1.y_I,
+            point2.x,
+            point2.x_I,
+            point2.y,
+            point2.y_I
+        );
 
         bytes32[8] memory r;
 
@@ -150,8 +170,13 @@ contract Hash_to_curve {
                 invalid()
             } //fail where we haven't enough gas to make the call
         }
-
-        return r;
+        G2_point memory P = G2_point({
+            x: bytes.concat(r[0], r[1]),
+            x_I: bytes.concat(r[2], r[3]),
+            y: bytes.concat(r[4], r[5]),
+            y_I: bytes.concat(r[6], r[7])
+        });
+        return P;
     }
 
     // ABI for mapping Fp element to G1 point
@@ -160,9 +185,9 @@ contract Hash_to_curve {
     //     Input has invalid length
     //     Input is not a valid field element
     function map_fp_to_g1(
-        bytes32[2] memory fp
-    ) public view returns (bytes32[4] memory) {
-        bytes memory input = abi.encodePacked(fp);
+        Field_point memory fp
+    ) public view returns (G1_point memory) {
+        bytes memory input = abi.encodePacked(fp.u);
 
         bytes32[4] memory r;
 
@@ -181,7 +206,11 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        return r;
+        G1_point memory P = G1_point({
+            x: bytes.concat(r[0], r[1]),
+            y: bytes.concat(r[2], r[3])
+        });
+        return P;
     }
 
     // ABI for mapping Fp2 element to G2 point
@@ -190,9 +219,9 @@ contract Hash_to_curve {
     //     Input has invalid length
     //     Input is not a valid field element
     function map_fp2_to_g2(
-        bytes32[4] memory fp2
-    ) public view returns (bytes32[8] memory) {
-        bytes memory input = abi.encodePacked(fp2);
+        Field_point_2 memory fp2
+    ) public view returns (G2_point memory) {
+        bytes memory input = abi.encodePacked(fp2.u, fp2.u_I);
 
         bytes32[8] memory r;
 
@@ -211,7 +240,13 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        return r;
+        G2_point memory P = G2_point({
+            x: bytes.concat(r[0], r[1]),
+            x_I: bytes.concat(r[2], r[3]),
+            y: bytes.concat(r[4], r[5]),
+            y_I: bytes.concat(r[6], r[7])
+        });
+        return P;
     }
 
     // Notes:
@@ -225,22 +260,22 @@ contract Hash_to_curve {
 
     function hash_to_curve_g2(
         bytes calldata message
-    ) public view returns (bytes32[8] memory) {
+    ) public view returns (G2_point memory) {
         // 1. u = hash_to_field(msg, 2)
-        bytes[2] memory u = hash_to_field_fp(
+        Field_point_2[2] memory u = hash_to_field_fp2(
             message,
             "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_"
         );
         // 2. Q0 = map_to_curve(u[0])
-        //bytes32[8] memory Q0 = map_fp2_to_g2(u[0]);
+        G2_point memory Q0 = map_fp2_to_g2(u[0]);
         // 3. Q1 = map_to_curve(u[1])
-        //bytes32[8] memory Q1 = map_fp2_to_g2(u[1]);
+        G2_point memory Q1 = map_fp2_to_g2(u[1]);
         // 4. R = Q0 + Q1              # Point addition
-        //bytes32[8] memory R = add_g2(Q0, Q1);
+        G2_point memory R = add_g2(Q0, Q1);
         // 5. P = clear_cofactor(R)
-        //bytes32[8] memory P = clear_cofactor_g2(R);
+        G2_point memory P = clear_cofactor_g2(R);
         // 6. return P
-        //return P;
+        return P;
     }
 
     // https://datatracker.ietf.org/doc/html/rfc9380#section-5.2
@@ -252,11 +287,12 @@ contract Hash_to_curve {
     function hash_to_field_fp2(
         bytes calldata message,
         bytes memory domain
-    ) public view returns (bytes[2][2] memory) {
+    ) public view returns (Field_point_2[2] memory) {
         //uint8 M = 2;
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+        // we add the 0 prefix so that the result will be exactly 64 bytes
         bytes
-            memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
+            memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
 
         // 1. len_in_bytes = count * m * L
         // so always 2 * 2 * 64 = 256
@@ -269,27 +305,52 @@ contract Hash_to_curve {
             domain
         );
 
-        bytes[2][2] memory u;
-
+        Field_point_2[2] memory u;
         // 3. for i in (0, ..., count - 1):
-        for (uint i = 0; i < 2; i++) {
-            // 4.   for j in (0, ..., m - 1):
-            for (uint j = 0; j < 2; j++) {
-                // 5.     elm_offset = L * (j + i * m)
-                uint256 elm_offset = (j + i * 2) * 2;
-                // 6.     tv = substr(uniform_bytes, elm_offset, L)
-                //uint8 HTF_L = 64;
-                bytes memory tv = new bytes(64);
-                tv = bytes.concat(
-                    pseudo_random_bytes[elm_offset],
-                    pseudo_random_bytes[elm_offset + 1]
-                );
+        // 4.   for j in (0, ..., m - 1):
 
-                // 7.     e_j = OS2IP(tv) mod p
-                // 8.   u_i = (e_0, ..., e_(m - 1))
-                u[i][j] = _modexp(tv, modulus);
-            }
-        }
+        // 5.     elm_offset = L * (j + i * m)
+        uint256 elm_offset = (0 + 0 * 2) * 2;
+        // 6.     tv = substr(uniform_bytes, elm_offset, L)
+        //uint8 HTF_L = 64;
+        bytes memory tv = new bytes(64);
+        tv = bytes.concat(
+            pseudo_random_bytes[elm_offset],
+            pseudo_random_bytes[elm_offset + 1]
+        );
+        u[0].u = _modexp(tv, modulus);
+        // 5.     elm_offset = L * (j + i * m)
+        elm_offset = (1 + 0 * 2) * 2;
+        // 6.     tv = substr(uniform_bytes, elm_offset, L)
+        //uint8 HTF_L = 64;
+        tv = bytes.concat(
+            pseudo_random_bytes[elm_offset],
+            pseudo_random_bytes[elm_offset + 1]
+        );
+        u[0].u_I = _modexp(tv, modulus);
+
+        // 5.     elm_offset = L * (j + i * m)
+        elm_offset = (0 + 1 * 2) * 2;
+        // 6.     tv = substr(uniform_bytes, elm_offset, L)
+        //uint8 HTF_L = 64;
+        tv = bytes.concat(
+            pseudo_random_bytes[elm_offset],
+            pseudo_random_bytes[elm_offset + 1]
+        );
+        u[1].u = _modexp(tv, modulus);
+
+        // 5.     elm_offset = L * (j + i * m)
+        elm_offset = (1 + 1 * 2) * 2;
+        // 6.     tv = substr(uniform_bytes, elm_offset, L)
+        //uint8 HTF_L = 64;
+        tv = bytes.concat(
+            pseudo_random_bytes[elm_offset],
+            pseudo_random_bytes[elm_offset + 1]
+        );
+        // 7.     e_j = OS2IP(tv) mod p
+        // 8.   u_i = (e_0, ..., e_(m - 1))
+        u[1].u_I = _modexp(tv, modulus);
+
         // 9. return (u_0, ..., u_(count - 1))
         return u;
     }
@@ -297,10 +358,11 @@ contract Hash_to_curve {
     function hash_to_field_fp(
         bytes calldata message,
         bytes memory domain
-    ) public view returns (bytes[2] memory) {
+    ) public view returns (Field_point[2] memory) {
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+        // we add the 0 prefix so that the result will be exactly 64 bytes
         bytes
-            memory modulus = hex"1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
+            memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
         // len_in_bytes = count * m * HTF_L
         // so always 2 * 1 * 64 = 128
         uint16 len_in_bytes = 128;
@@ -310,20 +372,19 @@ contract Hash_to_curve {
             len_in_bytes,
             domain
         );
+        Field_point[2] memory u;
 
-        bytes[2] memory u;
+        // uint8 HTF_L = 64;
+        bytes memory tv = new bytes(64);
+        // uint256 elm_offset = 0 * 2;
+        tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
+        u[0].u = _modexp(tv, modulus);
 
-        for (uint i = 0; i < 2; i++) {
-            uint256 elm_offset = i * 2;
-            // uint8 HTF_L = 64;
-            bytes memory tv = new bytes(64);
-            tv = bytes.concat(
-                pseudo_random_bytes[elm_offset],
-                pseudo_random_bytes[elm_offset + 1]
-            );
+        // uint8 HTF_L = 64;
+        // uint256 elm_offset2 = 1 * 2;
+        tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
+        u[1].u = _modexp(tv, modulus);
 
-            u[i] = _modexp(tv, modulus);
-        }
         return u;
     }
 
