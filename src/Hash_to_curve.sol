@@ -270,8 +270,8 @@ contract Hash_to_curve {
     ) public view returns (Field_point_2[2] memory) {
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         // we add the 0 prefix so that the result will be exactly 64 bytes
-        bytes
-            memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
+        // bytes
+        //     memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
 
         // 1. len_in_bytes = count * m * L
         // so always 2 * 2 * 64 = 256
@@ -295,13 +295,13 @@ contract Hash_to_curve {
         // 7.     e_j = OS2IP(tv) mod p
         tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
         // 8.   u_i = (e_0, ..., e_(m - 1))
-        u[0].u = _modexp(tv, modulus);
+        u[0].u = _modfield(tv);
         tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
-        u[0].u_I = _modexp(tv, modulus);
+        u[0].u_I = _modfield(tv);
         tv = bytes.concat(pseudo_random_bytes[4], pseudo_random_bytes[5]);
-        u[1].u = _modexp(tv, modulus);
+        u[1].u = _modfield(tv);
         tv = bytes.concat(pseudo_random_bytes[6], pseudo_random_bytes[7]);
-        u[1].u_I = _modexp(tv, modulus);
+        u[1].u_I = _modfield(tv);
 
         // 9. return (u_0, ..., u_(count - 1))
         return u;
@@ -316,10 +316,6 @@ contract Hash_to_curve {
         bytes calldata message,
         bytes memory domain
     ) public view returns (Field_point[2] memory) {
-        // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-        // we add the 0 prefix so that the result will be exactly 64 bytes
-        bytes
-            memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
         // len_in_bytes = count * m * HTF_L
         // so always 2 * 1 * 64 = 128
         uint16 len_in_bytes = 128;
@@ -336,11 +332,11 @@ contract Hash_to_curve {
         bytes memory tv = new bytes(64);
         // uint256 elm_offset = 0 * 2;
         tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
-        u[0].u = _modexp(tv, modulus);
+        u[0].u = _modfield(tv);
 
         // uint256 elm_offset2 = 1 * 2;
         tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
-        u[1].u = _modexp(tv, modulus);
+        u[1].u = _modfield(tv);
 
         return u;
     }
@@ -417,16 +413,12 @@ contract Hash_to_curve {
      *              https://github.com/ethereum/EIPs/pull/198
      *
      * @param _b bytes base
-     * @param _m bytes modulus
      * @param r bytes result.
      */
-    function _modexp(
-        bytes memory _b,
-        bytes memory _m
-    ) internal view returns (bytes memory r) {
+    function _modfield(bytes memory _b) internal view returns (bytes memory r) {
         assembly {
             let bl := mload(_b)
-            let ml := mload(_m)
+            let ml := 0x40
             let el := 0x20
 
             let freemem := mload(0x40) // Free memory pointer is always stored at 0x40
@@ -463,14 +455,29 @@ contract Hash_to_curve {
 
             // arg[5] = mod.bits @ +96+base.length+exp.length
             size := add(size, el)
-            success := staticcall(
-                450,
-                0x4,
-                add(_m, 32),
-                ml,
+
+            // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+            // we add the 0 prefix so that the result will be exactly 64 bytes
+            // saves 300 gas per call instead of sending it along every time
+            // bytes
+            //     memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
+            mstore(
                 add(freemem, size),
-                ml
+                0x000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd7
             )
+            mstore(
+                add(freemem, add(size, 32)),
+                0x64774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
+            )
+
+            // success := staticcall(
+            //     450,
+            //     0x4,
+            //     add(modulus, 32),
+            //     ml,
+            //     add(freemem, size),
+            //     ml
+            // )
 
             switch success
             case 0 {
