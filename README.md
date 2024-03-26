@@ -36,3 +36,6 @@ it seems we will need each of these operations exactly once (map is used 2 times
 
 g1 total cost: 23600 current hash to field ca 33000 so total ca: 56600
 g2 total cost: 179500 current hash to field ca 44000 so total ca: 223500
+
+The g2 calculation is naive and it will be way more expensive as just a simple scalar mul can't be used for the cofactor clearing as the scalar is way to big for the precompile.
+That means a an optimization such as Budroni-Pintore needs be used. Sadly it's not exactly a gas optimazation and will result in way higher costs than calculated above.
