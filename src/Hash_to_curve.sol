@@ -291,17 +291,17 @@ contract Hash_to_curve {
         // 5.     elm_offset = L * (j + i * m)
         // 6.     tv = substr(uniform_bytes, elm_offset, HTF_L)
         // uint8 HTF_L = 64;
-        bytes memory tv = new bytes(64);
+        //bytes memory tv = new bytes(64);
         // 7.     e_j = OS2IP(tv) mod p
-        tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
+        //tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
         // 8.   u_i = (e_0, ..., e_(m - 1))
-        u[0].u = _modfield(tv);
-        tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
-        u[0].u_I = _modfield(tv);
-        tv = bytes.concat(pseudo_random_bytes[4], pseudo_random_bytes[5]);
-        u[1].u = _modfield(tv);
-        tv = bytes.concat(pseudo_random_bytes[6], pseudo_random_bytes[7]);
-        u[1].u_I = _modfield(tv);
+        u[0].u = _modfield(pseudo_random_bytes[0], pseudo_random_bytes[1]);
+        // tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
+        u[0].u_I = _modfield(pseudo_random_bytes[2], pseudo_random_bytes[3]);
+        //tv = bytes.concat(pseudo_random_bytes[4], pseudo_random_bytes[5]);
+        u[1].u = _modfield(pseudo_random_bytes[4], pseudo_random_bytes[5]);
+        //tv = bytes.concat(pseudo_random_bytes[6], pseudo_random_bytes[7]);
+        u[1].u_I = _modfield(pseudo_random_bytes[6], pseudo_random_bytes[7]);
 
         // 9. return (u_0, ..., u_(count - 1))
         return u;
@@ -329,14 +329,14 @@ contract Hash_to_curve {
 
         // No loop here saves 800 gas
         // uint8 HTF_L = 64;
-        bytes memory tv = new bytes(64);
+        //bytes memory tv = new bytes(64);
         // uint256 elm_offset = 0 * 2;
-        tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
-        u[0].u = _modfield(tv);
+        //tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
+        u[0].u = _modfield(pseudo_random_bytes[0], pseudo_random_bytes[1]);
 
         // uint256 elm_offset2 = 1 * 2;
-        tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
-        u[1].u = _modfield(tv);
+        //tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
+        u[1].u = _modfield(pseudo_random_bytes[2], pseudo_random_bytes[3]);
 
         return u;
     }
@@ -408,16 +408,20 @@ contract Hash_to_curve {
 
     // From https://github.com/firoorg/solidity-BigNumber/blob/master/src/BigNumbers.sol
 
-    /** @notice Modular Exponentiation: Takes bytes values for base, exp, mod and calls precompile for (base^exp)%^mod
-     * @dev modexp: Wrapper for built-in modexp (contract 0x5) as described here:
-     *              https://github.com/ethereum/EIPs/pull/198
-     *
-     * @param _b bytes base
-     * @param r bytes result.
-     */
-    function _modfield(bytes memory _b) internal view returns (bytes memory r) {
+    // /** @notice Modular Exponentiation: Takes bytes values for base, exp, mod and calls precompile for (base^exp)%^mod
+    //  * @dev modexp: Wrapper for built-in modexp (contract 0x5) as described here:
+    //  *              https://github.com/ethereum/EIPs/pull/198
+    //  *
+    //  * @param _b bytes base
+    //  * @param r bytes result.
+    //  */
+    // passing two bytes32 instead of bytes memorysaves approx 700 gas per call
+    function _modfield(
+        bytes32 _b1,
+        bytes32 _b2
+    ) internal view returns (bytes memory r) {
         assembly {
-            let bl := mload(_b)
+            let bl := 0x40
             let ml := 0x40
             let el := 0x20
 
@@ -430,18 +434,22 @@ contract Hash_to_curve {
             mstore(add(freemem, 64), ml) // arg[2] = mod.length @ +64
 
             // arg[3] = base.bits @ + 96
-            // Use identity built-in (contract 0x4) as a cheap memcpy
-            let success := staticcall(
-                450,
-                0x4,
-                add(_b, 32),
-                bl,
-                add(freemem, 96),
-                bl
-            )
+            mstore(add(freemem, 96), _b1)
+            mstore(add(freemem, 128), _b2)
+
+            // // Use identity built-in (contract 0x4) as a cheap memcpy
+            // let success := staticcall(
+            //     450,
+            //     0x4,
+            //     add(_b, 32),
+            //     bl,
+            //     add(freemem, 96),
+            //     bl
+            // )
 
             // arg[4] = exp.bits @ +96+base.length
             let size := add(96, bl)
+            // exponent always 1
             mstore(add(freemem, size), 1)
 
             // success := staticcall(
@@ -479,15 +487,15 @@ contract Hash_to_curve {
             //     ml
             // )
 
-            switch success
-            case 0 {
-                invalid()
-            } //fail where we haven't enough gas to make the call
+            // switch success
+            // case 0 {
+            //     invalid()
+            // } //fail where we haven't enough gas to make the call
 
             // Total size of input = 96+base.length+exp.length+mod.length
             size := add(size, ml)
             // Invoke contract 0x5, put return value right after mod.length, @ +96
-            success := staticcall(
+            let success := staticcall(
                 sub(gas(), 1350),
                 0x5,
                 freemem,
@@ -504,22 +512,23 @@ contract Hash_to_curve {
             let length := ml
             let msword_ptr := add(freemem, 0x60)
 
-            ///the following code removes any leading words containing all zeroes in the result.
-            for {
+            // this is never needed because we always want 64 bytes returned saves 300 gas per call
+            // ///the following code removes any leading words containing all zeroes in the result.
+            // for {
 
-            } eq(eq(length, 0x20), 0) {
+            // } eq(eq(length, 0x20), 0) {
 
-            } {
-                // for(; length!=32; length-=32)
-                switch eq(mload(msword_ptr), 0) // if(msword==0):
-                case 1 {
-                    msword_ptr := add(msword_ptr, 0x20)
-                } //     update length pointer
-                default {
-                    break
-                } // else: loop termination. non-zero word found
-                length := sub(length, 0x20)
-            }
+            // } {
+            //     // for(; length!=32; length-=32)
+            //     switch eq(mload(msword_ptr), 0) // if(msword==0):
+            //     case 1 {
+            //         msword_ptr := add(msword_ptr, 0x20)
+            //     } //     update length pointer
+            //     default {
+            //         break
+            //     } // else: loop termination. non-zero word found
+            //     length := sub(length, 0x20)
+            // }
             r := sub(msword_ptr, 0x20)
             mstore(r, length)
 
