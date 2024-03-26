@@ -408,13 +408,14 @@ contract Hash_to_curve {
 
     // From https://github.com/firoorg/solidity-BigNumber/blob/master/src/BigNumbers.sol
 
-    // /** @notice Modular Exponentiation: Takes bytes values for base, exp, mod and calls precompile for (base^exp)%^mod
-    //  * @dev modexp: Wrapper for built-in modexp (contract 0x5) as described here:
-    //  *              https://github.com/ethereum/EIPs/pull/198
-    //  *
-    //  * @param _b bytes base
-    //  * @param r bytes result.
-    //  */
+    /** @notice Modular Exponentiation: Takes bytes values for base, exp, mod and calls precompile for (base^exp)%^mod
+     * @dev modexp: Wrapper for built-in modexp (contract 0x5) as described here:
+     *              https://github.com/ethereum/EIPs/pull/198
+     *
+     * @param _b1 bytes32 base first 32 bytes
+     * @param _b2 bytes32 base last 32 bytes
+     * @param r bytes result.
+     */
     // passing two bytes32 instead of bytes memorysaves approx 700 gas per call
     function _modfield(
         bytes32 _b1,
@@ -423,74 +424,43 @@ contract Hash_to_curve {
         assembly {
             let bl := 0x40
             let ml := 0x40
-            let el := 0x20
 
             let freemem := mload(0x40) // Free memory pointer is always stored at 0x40
 
-            mstore(freemem, bl) // arg[0] = base.length @ +0
-
-            mstore(add(freemem, 32), el) // arg[1] = exp.length @ +32
-
-            mstore(add(freemem, 64), ml) // arg[2] = mod.length @ +64
+            // arg[0] = base.length @ +0
+            mstore(freemem, bl)
+            // arg[1] = exp.length @ +32
+            mstore(add(freemem, 0x20), 0x20)
+            // arg[2] = mod.length @ +64
+            mstore(add(freemem, 0x40), ml)
 
             // arg[3] = base.bits @ + 96
-            mstore(add(freemem, 96), _b1)
-            mstore(add(freemem, 128), _b2)
+            // places the first 32 bytes of _b1 and the last 32 bytes of _b2
+            mstore(add(freemem, 0x60), _b1)
+            mstore(add(freemem, 0x80), _b2)
 
-            // // Use identity built-in (contract 0x4) as a cheap memcpy
-            // let success := staticcall(
-            //     450,
-            //     0x4,
-            //     add(_b, 32),
-            //     bl,
-            //     add(freemem, 96),
-            //     bl
-            // )
-
+            let size := add(0x60, bl)
             // arg[4] = exp.bits @ +96+base.length
-            let size := add(96, bl)
             // exponent always 1
             mstore(add(freemem, size), 1)
 
-            // success := staticcall(
-            //     450,
-            //     0x4,
-            //     add(0x20, 32),
-            //     el,
-            //     add(freemem, size),
-            //     el
-            // )
+            size := add(size, 0x20)
 
             // arg[5] = mod.bits @ +96+base.length+exp.length
-            size := add(size, el)
-
             // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
             // we add the 0 prefix so that the result will be exactly 64 bytes
             // saves 300 gas per call instead of sending it along every time
             // bytes
             //     memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
+            // places the first 32 bytes and the last 32 bytes of the field modulus
             mstore(
                 add(freemem, size),
                 0x000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd7
             )
             mstore(
-                add(freemem, add(size, 32)),
+                add(freemem, add(size, 0x20)),
                 0x64774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
             )
-
-            // success := staticcall(
-            //     450,
-            //     0x4,
-            //     add(modulus, 32),
-            //     ml,
-            //     add(freemem, size),
-            //     ml
-            // )
-
-            // switch success
-            // case 0 {
-            //     invalid()
-            // } //fail where we haven't enough gas to make the call
 
             // Total size of input = 96+base.length+exp.length+mod.length
             size := add(size, ml)
@@ -512,29 +482,12 @@ contract Hash_to_curve {
             let length := ml
             let msword_ptr := add(freemem, 0x60)
 
-            // this is never needed because we always want 64 bytes returned saves 300 gas per call
-            // ///the following code removes any leading words containing all zeroes in the result.
-            // for {
-
-            // } eq(eq(length, 0x20), 0) {
-
-            // } {
-            //     // for(; length!=32; length-=32)
-            //     switch eq(mload(msword_ptr), 0) // if(msword==0):
-            //     case 1 {
-            //         msword_ptr := add(msword_ptr, 0x20)
-            //     } //     update length pointer
-            //     default {
-            //         break
-            //     } // else: loop termination. non-zero word found
-            //     length := sub(length, 0x20)
-            // }
             r := sub(msword_ptr, 0x20)
             mstore(r, length)
 
             // point to the location of the return value (length, bits)
             //assuming mod length is multiple of 32, return value is already in the right format.
-            mstore(0x40, add(add(96, freemem), ml)) //deallocate freemem pointer
+            mstore(0x40, add(add(0x60, freemem), ml)) //deallocate freemem pointer
         }
     }
 }
