@@ -47,6 +47,26 @@ contract Hash_to_curve {
         return P;
     }
 
+    function hash_to_curve_g2(
+        bytes calldata message
+    ) public view returns (G2_point memory) {
+        // 1. u = hash_to_field(msg, 2)
+        Field_point_2[2] memory u = hash_to_field_fp2(
+            message,
+            "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_"
+        );
+        // 2. Q0 = map_to_curve(u[0])
+        G2_point memory Q0 = map_fp2_to_g2(u[0]);
+        // 3. Q1 = map_to_curve(u[1])
+        G2_point memory Q1 = map_fp2_to_g2(u[1]);
+        // 4. R = Q0 + Q1              # Point addition
+        G2_point memory R = add_g2(Q0, Q1);
+        // 5. P = clear_cofactor(R)
+        G2_point memory P = clear_cofactor_g2(R);
+        // 6. return P
+        return P;
+    }
+
     // clear_cofactor(P) := h_eff * P
     function clear_cofactor_g1(
         G1_point memory point1
@@ -80,11 +100,6 @@ contract Hash_to_curve {
 
     //     ABI for G2 multiplication
     // G2 multiplication call expects 288 bytes as an input that is interpreted as byte concatenation of encoding of G2 point (256 bytes) and encoding of a scalar value (32 bytes). Output is an encoding of multiplication operation result - single G2 point (256 bytes).
-    // Error cases:
-    //     Point being not on the curve must result in error
-    //     Field elements encoding rules apply (obviously)
-    //     Input has invalid length
-
     // h_eff 0xbc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551
     // todo: look into https://datatracker.ietf.org/doc/html/rfc9380#name-cofactor-clearing-for-bls12
     // because just a scalar multi is not gonna work, abi of precompile doesn't support scalars bigger than 32bytes
@@ -92,32 +107,29 @@ contract Hash_to_curve {
         G2_point memory point1
     ) public view returns (G2_point memory) {}
 
-    //    ABI for G1 addition
-    // G1 addition call expects 256 bytes as an input that is interpreted as byte concatenation of two G1 points (128 bytes each). Output is an encoding of addition operation result - single G1 point (128 bytes).
-    // Error cases:
-    //     Either of points being not on the curve must result in error
-    //     Field elements encoding rules apply (obviously)
-    //     Input has invalid length
+    // adds two G1 points using the precompile
     function add_g1(
         G1_point memory point1,
         G1_point memory point2
     ) public view returns (G1_point memory) {
-        bytes memory input = abi.encodePacked(
+        bytes memory input = bytes.concat(
             point1.x,
             point1.y,
             point2.x,
             point2.y
         );
 
-        bytes32[4] memory r;
+        bytes32[4] memory result;
 
+        //    ABI for G1 addition precompile
+        // G1 addition call expects 256 bytes as an input that is interpreted as byte concatenation of two G1 points (128 bytes each). Output is an encoding of addition operation result - single G1 point (128 bytes).
         assembly {
             let success := staticcall(
                 100000, /// gas should be 600
                 0x0a, // address of BLS12_G1ADD
                 input, //input offset
                 256, // input size
-                r, // output offset
+                result, // output offset
                 128 // output size
             )
             switch success
@@ -126,24 +138,20 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        G1_point memory P = G1_point({
-            x: bytes.concat(r[0], r[1]),
-            y: bytes.concat(r[2], r[3])
+        G1_point memory p = G1_point({
+            x: bytes.concat(result[0], result[1]),
+            y: bytes.concat(result[2], result[3])
         });
-        return P;
+
+        return p;
     }
 
-    // ABI for G2 addition
-    // G2 addition call expects 512 bytes as an input that is interpreted as byte concatenation of two G2 points (256 bytes each). Output is an encoding of addition operation result - single G2 point (256 bytes).
-    // Error cases:
-    //     Either of points being not on the curve must result in error
-    //     Field elements encoding rules apply (obviously)
-    //     Input has invalid length
+    // adds two G2 points using the precompile
     function add_g2(
         G2_point memory point1,
         G2_point memory point2
     ) public view returns (G2_point memory) {
-        bytes memory input = abi.encodePacked(
+        bytes memory input = bytes.concat(
             point1.x,
             point1.x_I,
             point1.y,
@@ -154,15 +162,17 @@ contract Hash_to_curve {
             point2.y_I
         );
 
-        bytes32[8] memory r;
+        bytes32[8] memory result;
 
+        // ABI for G2 addition precompile
+        // G2 addition call expects 512 bytes as an input that is interpreted as byte concatenation of two G2 points (256 bytes each). Output is an encoding of addition operation result - single G2 point (256 bytes).
         assembly {
             let success := staticcall(
                 100000, /// gas should be 4500
                 0x0d, // address of BLS12_G2ADD
                 input, //input offset
                 512, // input size
-                r, // output offset
+                result, // output offset
                 256 // output size
             )
             switch success
@@ -170,34 +180,33 @@ contract Hash_to_curve {
                 invalid()
             } //fail where we haven't enough gas to make the call
         }
-        G2_point memory P = G2_point({
-            x: bytes.concat(r[0], r[1]),
-            x_I: bytes.concat(r[2], r[3]),
-            y: bytes.concat(r[4], r[5]),
-            y_I: bytes.concat(r[6], r[7])
+        G2_point memory p = G2_point({
+            x: bytes.concat(result[0], result[1]),
+            x_I: bytes.concat(result[2], result[3]),
+            y: bytes.concat(result[4], result[5]),
+            y_I: bytes.concat(result[6], result[7])
         });
-        return P;
+
+        return p;
     }
 
-    // ABI for mapping Fp element to G1 point
-    // Field-to-curve call expects 64 bytes an an input that is interpreted as a an element of the base field. Output of this call is 128 bytes and is G1 point following respective encoding rules.
-    // Error cases:
-    //     Input has invalid length
-    //     Input is not a valid field element
+    // maps a field point to a G1 point using the precompile
     function map_fp_to_g1(
         Field_point memory fp
     ) public view returns (G1_point memory) {
-        bytes memory input = abi.encodePacked(fp.u);
+        bytes memory input = fp.u;
 
-        bytes32[4] memory r;
+        bytes32[4] memory result;
 
+        // ABI for mapping Fp element to G1 point precompile
+        // Field-to-curve call expects 64 bytes an an input that is interpreted as a an element of the base field. Output of this call is 128 bytes and is G1 point following respective encoding rules.
         assembly {
             let success := staticcall(
                 100000, /// gas should be 5500
                 0x11, // address of BLS12_MAP_FP_TO_G1
                 input, //input offset
                 64, // input size
-                r, // output offset
+                result, // output offset
                 128 // output size
             )
             switch success
@@ -206,32 +215,31 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        G1_point memory P = G1_point({
-            x: bytes.concat(r[0], r[1]),
-            y: bytes.concat(r[2], r[3])
+        G1_point memory p = G1_point({
+            x: bytes.concat(result[0], result[1]),
+            y: bytes.concat(result[2], result[3])
         });
-        return P;
+
+        return p;
     }
 
-    // ABI for mapping Fp2 element to G2 point
-    // Field-to-curve call expects 128 bytes an an input that is interpreted as a an element of the quadratic extension field. Output of this call is 256 bytes and is G2 point following respective encoding rules.
-    // Error cases:
-    //     Input has invalid length
-    //     Input is not a valid field element
+    // maps a field point 2 to a G2 point using the precompile
     function map_fp2_to_g2(
         Field_point_2 memory fp2
     ) public view returns (G2_point memory) {
-        bytes memory input = abi.encodePacked(fp2.u, fp2.u_I);
+        bytes memory input = bytes.concat(fp2.u, fp2.u_I);
 
-        bytes32[8] memory r;
+        bytes32[8] memory result;
 
+        // ABI for mapping Fp2 element to G2 point precompile
+        // Field-to-curve call expects 128 bytes an an input that is interpreted as a an element of the quadratic extension field. Output of this call is 256 bytes and is G2 point following respective encoding rules.
         assembly {
             let success := staticcall(
                 200000, /// gas should be 110000
                 0x12, // address of BLS12_MAP_FP2_TO_G2
                 input, //input offset
                 128, // input size
-                r, // output offset
+                result, // output offset
                 256 // output size
             )
             switch success
@@ -240,42 +248,14 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        G2_point memory P = G2_point({
-            x: bytes.concat(r[0], r[1]),
-            x_I: bytes.concat(r[2], r[3]),
-            y: bytes.concat(r[4], r[5]),
-            y_I: bytes.concat(r[6], r[7])
+        G2_point memory p = G2_point({
+            x: bytes.concat(result[0], result[1]),
+            x_I: bytes.concat(result[2], result[3]),
+            y: bytes.concat(result[4], result[5]),
+            y_I: bytes.concat(result[6], result[7])
         });
-        return P;
-    }
 
-    // Notes:
-    // abi for the precompiles is bytes32 concats, so like this bytes32[4] for two points or a G2 point
-    // so no length or anything. For reference a base field point is bytes32[2] (G1) and two points in the quadratic field are bytes32[8] or 256 bytes
-    // addition takes a concatination of two points so G1 = bytes32[4] and G2 = bytes32[8]
-    // multiplication takes the point and a concatinated int256
-    // map to curve g1 takes a 64 bytes field element
-    // map to curve g2 takes a 128 bytes field element
-    // all operations return a single point either G1 or G2 so either 128 or 256 bytes
-
-    function hash_to_curve_g2(
-        bytes calldata message
-    ) public view returns (G2_point memory) {
-        // 1. u = hash_to_field(msg, 2)
-        Field_point_2[2] memory u = hash_to_field_fp2(
-            message,
-            "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_"
-        );
-        // 2. Q0 = map_to_curve(u[0])
-        G2_point memory Q0 = map_fp2_to_g2(u[0]);
-        // 3. Q1 = map_to_curve(u[1])
-        G2_point memory Q1 = map_fp2_to_g2(u[1]);
-        // 4. R = Q0 + Q1              # Point addition
-        G2_point memory R = add_g2(Q0, Q1);
-        // 5. P = clear_cofactor(R)
-        G2_point memory P = clear_cofactor_g2(R);
-        // 6. return P
-        return P;
+        return p;
     }
 
     // https://datatracker.ietf.org/doc/html/rfc9380#section-5.2
@@ -288,7 +268,6 @@ contract Hash_to_curve {
         bytes calldata message,
         bytes memory domain
     ) public view returns (Field_point_2[2] memory) {
-        //uint8 M = 2;
         // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
         // we add the 0 prefix so that the result will be exactly 64 bytes
         bytes
@@ -306,55 +285,33 @@ contract Hash_to_curve {
         );
 
         Field_point_2[2] memory u;
+        // No loop here saves 800 gas hardcoding offset an additional 300
         // 3. for i in (0, ..., count - 1):
         // 4.   for j in (0, ..., m - 1):
-
         // 5.     elm_offset = L * (j + i * m)
-        uint256 elm_offset = (0 + 0 * 2) * 2;
-        // 6.     tv = substr(uniform_bytes, elm_offset, L)
-        //uint8 HTF_L = 64;
+        // 6.     tv = substr(uniform_bytes, elm_offset, HTF_L)
+        // uint8 HTF_L = 64;
         bytes memory tv = new bytes(64);
-        tv = bytes.concat(
-            pseudo_random_bytes[elm_offset],
-            pseudo_random_bytes[elm_offset + 1]
-        );
-        u[0].u = _modexp(tv, modulus);
-        // 5.     elm_offset = L * (j + i * m)
-        elm_offset = (1 + 0 * 2) * 2;
-        // 6.     tv = substr(uniform_bytes, elm_offset, L)
-        //uint8 HTF_L = 64;
-        tv = bytes.concat(
-            pseudo_random_bytes[elm_offset],
-            pseudo_random_bytes[elm_offset + 1]
-        );
-        u[0].u_I = _modexp(tv, modulus);
-
-        // 5.     elm_offset = L * (j + i * m)
-        elm_offset = (0 + 1 * 2) * 2;
-        // 6.     tv = substr(uniform_bytes, elm_offset, L)
-        //uint8 HTF_L = 64;
-        tv = bytes.concat(
-            pseudo_random_bytes[elm_offset],
-            pseudo_random_bytes[elm_offset + 1]
-        );
-        u[1].u = _modexp(tv, modulus);
-
-        // 5.     elm_offset = L * (j + i * m)
-        elm_offset = (1 + 1 * 2) * 2;
-        // 6.     tv = substr(uniform_bytes, elm_offset, L)
-        //uint8 HTF_L = 64;
-        tv = bytes.concat(
-            pseudo_random_bytes[elm_offset],
-            pseudo_random_bytes[elm_offset + 1]
-        );
         // 7.     e_j = OS2IP(tv) mod p
+        tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
         // 8.   u_i = (e_0, ..., e_(m - 1))
+        u[0].u = _modexp(tv, modulus);
+        tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
+        u[0].u_I = _modexp(tv, modulus);
+        tv = bytes.concat(pseudo_random_bytes[4], pseudo_random_bytes[5]);
+        u[1].u = _modexp(tv, modulus);
+        tv = bytes.concat(pseudo_random_bytes[6], pseudo_random_bytes[7]);
         u[1].u_I = _modexp(tv, modulus);
 
         // 9. return (u_0, ..., u_(count - 1))
         return u;
     }
 
+    // Input:
+    // - msg, a byte string containing the message to hash.
+    // - count, the number of elements of F to output.
+    // count is always 2 for hash to curve usage
+    // - DST, a domain separation tag (see Section 3.1).
     function hash_to_field_fp(
         bytes calldata message,
         bytes memory domain
@@ -374,13 +331,13 @@ contract Hash_to_curve {
         );
         Field_point[2] memory u;
 
+        // No loop here saves 800 gas
         // uint8 HTF_L = 64;
         bytes memory tv = new bytes(64);
         // uint256 elm_offset = 0 * 2;
         tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
         u[0].u = _modexp(tv, modulus);
 
-        // uint8 HTF_L = 64;
         // uint256 elm_offset2 = 1 * 2;
         tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
         u[1].u = _modexp(tv, modulus);
@@ -394,8 +351,6 @@ contract Hash_to_curve {
     // - DST, a byte string of at most 255 bytes.
     // - len_in_bytes, the length of the requested output in bytes,
     //   not greater than the lesser of (255 * b_in_bytes) or 2^16-1.
-
-    // len_in_bytes is supposed to be able to be bigger but for now we just use 255  to simplify the code
     // returns bytes32[] because len_in_bytes is always a multiple of 32 in our case even 128
     function expand_msg_xmd(
         bytes calldata message,
@@ -433,8 +388,6 @@ contract Hash_to_curve {
             hex"00",
             dst_prime
         );
-        // console.log("msg_prime");
-        // console.logBytes(msg_prime);
 
         bytes32 b_0;
         bytes32[] memory b = new bytes32[](ell);
@@ -444,30 +397,16 @@ contract Hash_to_curve {
 
         // 8.  b_1 = H(b_0 || I2OSP(1, 1) || DST_prime)
         b[0] = sha256(bytes.concat(b_0, hex"01", dst_prime));
-        // console.log("b1");
-        // console.logBytes32(b[1]);
-
-        //bytes memory pseudo_random_bytes = bytes.concat(b[1]);
-        // console.log("pseudo_random_bytes");
-        // console.logBytes(pseudo_random_bytes);
 
         // 9.  for i in (2, ..., ell):
         for (uint8 i = 2; i <= ell; i++) {
             // 10.    b_i = H(strxor(b_0, b_(i - 1)) || I2OSP(i, 1) || DST_prime)
             bytes memory tmp = abi.encodePacked(b_0 ^ b[i - 2], i, dst_prime);
             b[i - 1] = sha256(tmp);
-
-            // 11. uniform_bytes = b_1 || ... || b_ell
-            //pseudo_random_bytes = bytes.concat(pseudo_random_bytes, tmpHash);
         }
-        // console.log("pseudo_random_bytes");
-        // console.logBytes(pseudo_random_bytes);
-
+        // 11. uniform_bytes = b_1 || ... || b_ell
         // 12. return substr(uniform_bytes, 0, len_in_bytes)
-        // bytes memory a = new bytes(len_in_bytes);
-        // for (uint i = 0; i < len_in_bytes; i++) {
-        //     a[i] = pseudo_random_bytes[i];
-        // }
+        // Here we don't need the uniform_bytes because b is already properly formed
         return b;
     }
 
