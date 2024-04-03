@@ -42,9 +42,9 @@ contract Hash_to_curve {
         // 4. R = Q0 + Q1              # Point addition
         G1_point memory R = add_g1(Q0, Q1);
         // 5. P = clear_cofactor(R)
-        G1_point memory P = clear_cofactor_g1(R);
+        // Not needed as map fp to g1 already does it
         // 6. return P
-        return P;
+        return R;
     }
 
     function hash_to_curve_g2(
@@ -62,50 +62,10 @@ contract Hash_to_curve {
         // 4. R = Q0 + Q1              # Point addition
         G2_point memory R = add_g2(Q0, Q1);
         // 5. P = clear_cofactor(R)
-        G2_point memory P = clear_cofactor_g2(R);
+        // Not needed as map fp to g1 already does it
         // 6. return P
-        return P;
+        return R;
     }
-
-    // clear_cofactor(P) := h_eff * P
-    function clear_cofactor_g1(
-        G1_point memory point1
-    ) public view returns (G1_point memory) {
-        uint256 h_eff = 0xd201000000010001;
-        bytes memory input = abi.encodePacked(point1.x, point1.y, h_eff);
-        bytes32[4] memory r;
-
-        assembly {
-            let success := staticcall(
-                100000, /// gas should be 12000
-                0x0b, // address of BLS12_G1MUL
-                input, //input offset
-                add(128, 32), // input size
-                r, // output offset
-                128 // output size
-            )
-            switch success
-            case 0 {
-                invalid()
-            } //fail where we haven't enough gas to make the call
-        }
-
-        G1_point memory P = G1_point({
-            x: bytes.concat(r[0], r[1]),
-            y: bytes.concat(r[2], r[3])
-        });
-
-        return P;
-    }
-
-    //     ABI for G2 multiplication
-    // G2 multiplication call expects 288 bytes as an input that is interpreted as byte concatenation of encoding of G2 point (256 bytes) and encoding of a scalar value (32 bytes). Output is an encoding of multiplication operation result - single G2 point (256 bytes).
-    // h_eff 0xbc69f08f2ee75b3584c6a0ea91b352888e2a8e9145ad7689986ff031508ffe1329c2f178731db956d82bf015d1212b02ec0ec69d7477c1ae954cbc06689f6a359894c0adebbf6b4e8020005aaa95551
-    // todo: look into https://datatracker.ietf.org/doc/html/rfc9380#name-cofactor-clearing-for-bls12
-    // because just a scalar multi is not gonna work, abi of precompile doesn't support scalars bigger than 32bytes
-    function clear_cofactor_g2(
-        G2_point memory point1
-    ) public view returns (G2_point memory) {}
 
     // adds two G1 points using the precompile
     function add_g1(
