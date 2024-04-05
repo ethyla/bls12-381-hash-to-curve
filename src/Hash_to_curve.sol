@@ -33,18 +33,22 @@ contract Hash_to_curve {
         // 1. u = hash_to_field(msg, 2)
         Field_point[2] memory u = hash_to_field_fp(
             message,
-            "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_"
+            "BLS12381G1_XMD:SHA-256_SSWU_RO_TESTGEN"
         );
         // 2. Q0 = map_to_curve(u[0])
-        G1_point memory Q0 = map_fp_to_g1(u[0]);
+        bytes32[4] memory Q0 = map_fp_to_g1(u[0].u);
         // 3. Q1 = map_to_curve(u[1])
-        G1_point memory Q1 = map_fp_to_g1(u[1]);
+        bytes32[4] memory Q1 = map_fp_to_g1(u[1].u);
         // 4. R = Q0 + Q1              # Point addition
-        G1_point memory R = add_g1(Q0, Q1);
+        bytes32[4] memory R = add_g1(Q0, Q1);
         // 5. P = clear_cofactor(R)
         // Not needed as map fp to g1 already does it
         // 6. return P
-        return R;
+        G1_point memory P = G1_point({
+            x: bytes.concat(R[0], R[1]),
+            y: bytes.concat(R[2], R[3])
+        });
+        return P;
     }
 
     function hash_to_curve_g2(
@@ -53,36 +57,46 @@ contract Hash_to_curve {
         // 1. u = hash_to_field(msg, 2)
         Field_point_2[2] memory u = hash_to_field_fp2(
             message,
-            "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_"
+            "BLS12381G2_XMD:SHA-256_SSWU_RO_TESTGEN"
         );
         // 2. Q0 = map_to_curve(u[0])
-        G2_point memory Q0 = map_fp2_to_g2(u[0]);
+        bytes32[8] memory Q0 = map_fp2_to_g2(u[0]);
         // 3. Q1 = map_to_curve(u[1])
-        G2_point memory Q1 = map_fp2_to_g2(u[1]);
+        bytes32[8] memory Q1 = map_fp2_to_g2(u[1]);
         // 4. R = Q0 + Q1              # Point addition
-        G2_point memory R = add_g2(Q0, Q1);
+        bytes32[8] memory R = add_g2(Q0, Q1);
         // 5. P = clear_cofactor(R)
         // Not needed as map fp to g1 already does it
         // 6. return P
-        return R;
+        G2_point memory P = G2_point({
+            x: bytes.concat(R[0], R[1]),
+            x_I: bytes.concat(R[2], R[3]),
+            y: bytes.concat(R[4], R[5]),
+            y_I: bytes.concat(R[6], R[7])
+        });
+
+        return P;
     }
 
     // adds two G1 points using the precompile
     function add_g1(
-        G1_point memory point1,
-        G1_point memory point2
-    ) public view returns (G1_point memory) {
-        bytes memory input = bytes.concat(
-            point1.x,
-            point1.y,
-            point2.x,
-            point2.y
-        );
+        bytes32[4] memory point1,
+        bytes32[4] memory point2
+    ) public view returns (bytes32[4] memory) {
+        bytes32[8] memory input;
+        input[0] = point1[0];
+        input[1] = point1[1];
+        input[2] = point1[2];
+        input[3] = point1[3];
+        input[4] = point2[0];
+        input[5] = point2[1];
+        input[6] = point2[2];
+        input[7] = point2[3];
 
         bytes32[4] memory result;
 
-        //    ABI for G1 addition precompile
-        // G1 addition call expects 256 bytes as an input that is interpreted as byte concatenation of two G1 points (128 bytes each). Output is an encoding of addition operation result - single G1 point (128 bytes).
+        // //    ABI for G1 addition precompile
+        // // G1 addition call expects 256 bytes as an input that is interpreted as byte concatenation of two G1 points (128 bytes each). Output is an encoding of addition operation result - single G1 point (128 bytes).
         assembly {
             let success := staticcall(
                 100000, /// gas should be 600
@@ -98,29 +112,33 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        G1_point memory p = G1_point({
-            x: bytes.concat(result[0], result[1]),
-            y: bytes.concat(result[2], result[3])
-        });
-
-        return p;
+        return result;
     }
 
     // adds two G2 points using the precompile
     function add_g2(
-        G2_point memory point1,
-        G2_point memory point2
-    ) public view returns (G2_point memory) {
-        bytes memory input = bytes.concat(
-            point1.x,
-            point1.x_I,
-            point1.y,
-            point1.y_I,
-            point2.x,
-            point2.x_I,
-            point2.y,
-            point2.y_I
-        );
+        bytes32[8] memory point1,
+        bytes32[8] memory point2
+    ) public view returns (bytes32[8] memory) {
+        bytes32[16] memory input;
+
+        input[0] = point1[0];
+        input[1] = point1[1];
+        input[2] = point1[2];
+        input[3] = point1[3];
+        input[4] = point1[4];
+        input[5] = point1[5];
+        input[6] = point1[6];
+        input[7] = point1[7];
+
+        input[8] = point2[0];
+        input[9] = point2[1];
+        input[10] = point2[2];
+        input[11] = point2[3];
+        input[12] = point2[4];
+        input[13] = point2[5];
+        input[14] = point2[6];
+        input[15] = point2[7];
 
         bytes32[8] memory result;
 
@@ -140,21 +158,23 @@ contract Hash_to_curve {
                 invalid()
             } //fail where we haven't enough gas to make the call
         }
-        G2_point memory p = G2_point({
-            x: bytes.concat(result[0], result[1]),
-            x_I: bytes.concat(result[2], result[3]),
-            y: bytes.concat(result[4], result[5]),
-            y_I: bytes.concat(result[6], result[7])
-        });
 
-        return p;
+        return result;
     }
 
     // maps a field point to a G1 point using the precompile
     function map_fp_to_g1(
-        Field_point memory fp
-    ) public view returns (G1_point memory) {
-        bytes memory input = fp.u;
+        bytes memory fp
+    ) public view returns (bytes32[4] memory) {
+        bytes32 a;
+        bytes32 b;
+        assembly {
+            a := mload(add(fp, 0x20))
+            b := mload(add(fp, 0x40))
+        }
+        bytes32[2] memory input;
+        input[0] = a;
+        input[1] = b;
 
         bytes32[4] memory result;
 
@@ -175,19 +195,31 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        G1_point memory p = G1_point({
-            x: bytes.concat(result[0], result[1]),
-            y: bytes.concat(result[2], result[3])
-        });
-
-        return p;
+        return result;
     }
 
     // maps a field point 2 to a G2 point using the precompile
     function map_fp2_to_g2(
         Field_point_2 memory fp2
-    ) public view returns (G2_point memory) {
-        bytes memory input = bytes.concat(fp2.u, fp2.u_I);
+    ) public view returns (bytes32[8] memory) {
+        bytes memory fp = bytes.concat(fp2.u, fp2.u_I);
+
+        bytes32 a;
+        bytes32 b;
+        bytes32 c;
+        bytes32 d;
+        assembly {
+            a := mload(add(fp, 0x20))
+            b := mload(add(fp, 0x40))
+            c := mload(add(fp, 0x60))
+            d := mload(add(fp, 0x80))
+        }
+
+        bytes32[4] memory input;
+        input[0] = a;
+        input[1] = b;
+        input[2] = c;
+        input[3] = d;
 
         bytes32[8] memory result;
 
@@ -208,14 +240,7 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
         }
 
-        G2_point memory p = G2_point({
-            x: bytes.concat(result[0], result[1]),
-            x_I: bytes.concat(result[2], result[3]),
-            y: bytes.concat(result[4], result[5]),
-            y_I: bytes.concat(result[6], result[7])
-        });
-
-        return p;
+        return result;
     }
 
     // https://datatracker.ietf.org/doc/html/rfc9380#section-5.2
@@ -232,18 +257,15 @@ contract Hash_to_curve {
         // we add the 0 prefix so that the result will be exactly 64 bytes
         // bytes
         //     memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
-
         // 1. len_in_bytes = count * m * L
         // so always 2 * 2 * 64 = 256
         uint16 len_in_bytes = 256;
-
         // 2. uniform_bytes = expand_message(msg, DST, len_in_bytes)
         bytes32[] memory pseudo_random_bytes = expand_msg_xmd(
             message,
             len_in_bytes,
             domain
         );
-
         Field_point_2[2] memory u;
         // No loop here saves 800 gas hardcoding offset an additional 300
         // 3. for i in (0, ..., count - 1):
@@ -262,7 +284,6 @@ contract Hash_to_curve {
         u[1].u = _modfield(pseudo_random_bytes[4], pseudo_random_bytes[5]);
         //tv = bytes.concat(pseudo_random_bytes[6], pseudo_random_bytes[7]);
         u[1].u_I = _modfield(pseudo_random_bytes[6], pseudo_random_bytes[7]);
-
         // 9. return (u_0, ..., u_(count - 1))
         return u;
     }
