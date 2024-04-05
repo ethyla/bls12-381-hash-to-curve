@@ -28,13 +28,11 @@ contract Hash_to_curve {
     // Input: msg, an arbitrary-length byte string.
     // Output: P, a point in G.
     function hash_to_curve_g1(
-        bytes calldata message
+        bytes calldata message,
+        bytes calldata dst
     ) public view returns (G1_point memory) {
         // 1. u = hash_to_field(msg, 2)
-        Field_point[2] memory u = hash_to_field_fp(
-            message,
-            "BLS12381G1_XMD:SHA-256_SSWU_RO_TESTGEN"
-        );
+        Field_point[2] memory u = hash_to_field_fp(message, dst);
         // 2. Q0 = map_to_curve(u[0])
         bytes32[4] memory Q0 = map_fp_to_g1(u[0].u);
         // 3. Q1 = map_to_curve(u[1])
@@ -52,13 +50,11 @@ contract Hash_to_curve {
     }
 
     function hash_to_curve_g2(
-        bytes calldata message
+        bytes calldata message,
+        bytes calldata dst
     ) public view returns (G2_point memory) {
         // 1. u = hash_to_field(msg, 2)
-        Field_point_2[2] memory u = hash_to_field_fp2(
-            message,
-            "BLS12381G2_XMD:SHA-256_SSWU_RO_TESTGEN"
-        );
+        Field_point_2[2] memory u = hash_to_field_fp2(message, dst);
         // 2. Q0 = map_to_curve(u[0])
         bytes32[8] memory Q0 = map_fp2_to_g2(u[0]);
         // 3. Q1 = map_to_curve(u[1])
