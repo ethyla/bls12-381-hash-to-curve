@@ -8,7 +8,7 @@ describe("Check if EIP enabled", function () {
 
     let result = await tester.test_BLS12_G1ADD();
     console.log(result);
-    expect(result[0]).toNot.equal(
+    expect(result[0]).to.not.equal(
       "0x0000000000000000000000000000000000000000000000000000000000000000"
     );
   });
