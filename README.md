@@ -9,9 +9,7 @@ Follows https://datatracker.ietf.org/doc/html/rfc9380
 Working:  
 expand_msg_xmd  
 hash_to_field fp and fp2
-
-needs testing:
-hash_to_curve g1 and g2
+hash_to_curve g1 and g2 (provided you have a node with bls precompiles enabled)
 
 ### Notes
 
