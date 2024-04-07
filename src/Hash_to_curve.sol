@@ -30,7 +30,7 @@ contract Hash_to_curve {
     function hash_to_curve_g1(
         bytes calldata message,
         bytes calldata dst
-    ) public view returns (G1_point memory) {
+    ) external view returns (G1_point memory) {
         // 1. u = hash_to_field(msg, 2)
         Field_point[2] memory u = hash_to_field_fp(message, dst);
         // 2. Q0 = map_to_curve(u[0])
@@ -52,7 +52,7 @@ contract Hash_to_curve {
     function hash_to_curve_g2(
         bytes calldata message,
         bytes calldata dst
-    ) public view returns (G2_point memory) {
+    ) external view returns (G2_point memory) {
         // 1. u = hash_to_field(msg, 2)
         Field_point_2[2] memory u = hash_to_field_fp2(message, dst);
         // 2. Q0 = map_to_curve(u[0])
@@ -78,7 +78,7 @@ contract Hash_to_curve {
     function add_g1(
         bytes32[4] memory point1,
         bytes32[4] memory point2
-    ) public view returns (bytes32[4] memory) {
+    ) internal view returns (bytes32[4] memory) {
         bytes32[8] memory input;
         input[0] = point1[0];
         input[1] = point1[1];
@@ -115,7 +115,7 @@ contract Hash_to_curve {
     function add_g2(
         bytes32[8] memory point1,
         bytes32[8] memory point2
-    ) public view returns (bytes32[8] memory) {
+    ) internal view returns (bytes32[8] memory) {
         bytes32[16] memory input;
 
         input[0] = point1[0];
@@ -161,7 +161,7 @@ contract Hash_to_curve {
     // maps a field point to a G1 point using the precompile
     function map_fp_to_g1(
         bytes memory fp
-    ) public view returns (bytes32[4] memory) {
+    ) internal view returns (bytes32[4] memory) {
         bytes32 a;
         bytes32 b;
         assembly {
@@ -197,7 +197,7 @@ contract Hash_to_curve {
     // maps a field point 2 to a G2 point using the precompile
     function map_fp2_to_g2(
         Field_point_2 memory fp2
-    ) public view returns (bytes32[8] memory) {
+    ) internal view returns (bytes32[8] memory) {
         bytes memory fp = bytes.concat(fp2.u, fp2.u_I);
 
         bytes32 a;
@@ -247,20 +247,16 @@ contract Hash_to_curve {
     // - DST, a domain separation tag (see Section 3.1).
     function hash_to_field_fp2(
         bytes calldata message,
-        bytes memory domain
+        bytes calldata dst
     ) public view returns (Field_point_2[2] memory) {
-        // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-        // we add the 0 prefix so that the result will be exactly 64 bytes
-        // bytes
-        //     memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
         // 1. len_in_bytes = count * m * L
         // so always 2 * 2 * 64 = 256
         uint16 len_in_bytes = 256;
         // 2. uniform_bytes = expand_message(msg, DST, len_in_bytes)
         bytes32[] memory pseudo_random_bytes = expand_msg_xmd(
             message,
-            len_in_bytes,
-            domain
+            dst,
+            len_in_bytes
         );
         Field_point_2[2] memory u;
         // No loop here saves 800 gas hardcoding offset an additional 300
@@ -269,16 +265,13 @@ contract Hash_to_curve {
         // 5.     elm_offset = L * (j + i * m)
         // 6.     tv = substr(uniform_bytes, elm_offset, HTF_L)
         // uint8 HTF_L = 64;
-        //bytes memory tv = new bytes(64);
+        // bytes memory tv = new bytes(64);
         // 7.     e_j = OS2IP(tv) mod p
-        //tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
         // 8.   u_i = (e_0, ..., e_(m - 1))
+        // tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
         u[0].u = _modfield(pseudo_random_bytes[0], pseudo_random_bytes[1]);
-        // tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
         u[0].u_I = _modfield(pseudo_random_bytes[2], pseudo_random_bytes[3]);
-        //tv = bytes.concat(pseudo_random_bytes[4], pseudo_random_bytes[5]);
         u[1].u = _modfield(pseudo_random_bytes[4], pseudo_random_bytes[5]);
-        //tv = bytes.concat(pseudo_random_bytes[6], pseudo_random_bytes[7]);
         u[1].u_I = _modfield(pseudo_random_bytes[6], pseudo_random_bytes[7]);
         // 9. return (u_0, ..., u_(count - 1))
         return u;
@@ -291,7 +284,7 @@ contract Hash_to_curve {
     // - DST, a domain separation tag (see Section 3.1).
     function hash_to_field_fp(
         bytes calldata message,
-        bytes memory domain
+        bytes calldata dst
     ) public view returns (Field_point[2] memory) {
         // len_in_bytes = count * m * HTF_L
         // so always 2 * 1 * 64 = 128
@@ -299,20 +292,20 @@ contract Hash_to_curve {
 
         bytes32[] memory pseudo_random_bytes = expand_msg_xmd(
             message,
-            len_in_bytes,
-            domain
+            dst,
+            len_in_bytes
         );
         Field_point[2] memory u;
 
         // No loop here saves 800 gas
         // uint8 HTF_L = 64;
-        //bytes memory tv = new bytes(64);
+        // bytes memory tv = new bytes(64);
         // uint256 elm_offset = 0 * 2;
-        //tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
+        // tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
         u[0].u = _modfield(pseudo_random_bytes[0], pseudo_random_bytes[1]);
 
         // uint256 elm_offset2 = 1 * 2;
-        //tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
+        // tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
         u[1].u = _modfield(pseudo_random_bytes[2], pseudo_random_bytes[3]);
 
         return u;
@@ -327,15 +320,15 @@ contract Hash_to_curve {
     // returns bytes32[] because len_in_bytes is always a multiple of 32 in our case even 128
     function expand_msg_xmd(
         bytes calldata message,
-        uint16 len_in_bytes,
-        bytes memory dst
+        bytes calldata dst,
+        uint16 len_in_bytes
     ) public pure returns (bytes32[] memory) {
         // 1.  ell = ceil(len_in_bytes / b_in_bytes)
-        // 2.  ABORT if ell > 255 or len_in_bytes > 65535 or len(DST) > 255
         // b_in_bytes seems to be 32 for sha256
         // ceil the division
         uint ell = (len_in_bytes - 1) / 32 + 1;
 
+        // 2.  ABORT if ell > 255 or len_in_bytes > 65535 or len(DST) > 255
         require(ell <= 255, "len_in_bytes too large for sha256");
         // Not really needed because of parameter type
         require(len_in_bytes <= 65535, "len_in_bytes too large");
@@ -383,7 +376,7 @@ contract Hash_to_curve {
         return b;
     }
 
-    // From https://github.com/firoorg/solidity-BigNumber/blob/master/src/BigNumbers.sol
+    // Originaly from https://github.com/firoorg/solidity-BigNumber/blob/master/src/BigNumbers.sol
 
     /** @notice Modular Exponentiation: Takes bytes values for base, exp, mod and calls precompile for (base^exp)%^mod
      * @dev modexp: Wrapper for built-in modexp (contract 0x5) as described here:
@@ -393,7 +386,7 @@ contract Hash_to_curve {
      * @param _b2 bytes32 base last 32 bytes
      * @param r bytes result.
      */
-    // passing two bytes32 instead of bytes memorysaves approx 700 gas per call
+    // passing two bytes32 instead of bytes memory saves approx 700 gas per call
     function _modfield(
         bytes32 _b1,
         bytes32 _b2
@@ -427,8 +420,6 @@ contract Hash_to_curve {
             // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
             // we add the 0 prefix so that the result will be exactly 64 bytes
             // saves 300 gas per call instead of sending it along every time
-            // bytes
-            //     memory modulus = hex"000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab";
             // places the first 32 bytes and the last 32 bytes of the field modulus
             mstore(
                 add(freemem, size),
