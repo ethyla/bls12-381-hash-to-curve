@@ -399,22 +399,19 @@ contract Hash_to_curve {
 
             // arg[0] = base.length @ +0
             mstore(freemem, bl)
-            // arg[1] = exp.length @ +32
+            // arg[1] = exp.length @ +0x20
             mstore(add(freemem, 0x20), 0x20)
-            // arg[2] = mod.length @ +64
+            // arg[2] = mod.length @ +0x40
             mstore(add(freemem, 0x40), ml)
 
-            // arg[3] = base.bits @ + 96
+            // arg[3] = base.bits @ + 0x60
             // places the first 32 bytes of _b1 and the last 32 bytes of _b2
             mstore(add(freemem, 0x60), _b1)
             mstore(add(freemem, 0x80), _b2)
 
-            let size := add(0x60, bl)
-            // arg[4] = exp.bits @ +96+base.length
+            // arg[4] = exp.bits @ +0x60+base.length
             // exponent always 1
-            mstore(add(freemem, size), 1)
-
-            size := add(size, 0x20)
+            mstore(add(freemem, 0xa0), 1)
 
             // arg[5] = mod.bits @ +96+base.length+exp.length
             // this field_modulus as hex 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
@@ -422,40 +419,32 @@ contract Hash_to_curve {
             // saves 300 gas per call instead of sending it along every time
             // places the first 32 bytes and the last 32 bytes of the field modulus
             mstore(
-                add(freemem, size),
+                add(freemem, 0xc0),
                 0x000000000000000000000000000000001a0111ea397fe69a4b1ba7b6434bacd7
             )
             mstore(
-                add(freemem, add(size, 0x20)),
+                add(freemem, 0xe0),
                 0x64774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
             )
 
-            // Total size of input = 96+base.length+exp.length+mod.length
-            size := add(size, ml)
-            // Invoke contract 0x5, put return value right after mod.length, @ +96
+            // Invoke contract 0x5, put return value right after mod.length, @ 0x60
             let success := staticcall(
-                sub(gas(), 1350),
-                0x5,
-                freemem,
-                size,
-                add(freemem, 0x60),
-                ml
+                sub(gas(), 1350), // gas
+                0x5, // mpdexp precompile
+                freemem, //input offset
+                0x100, // input size  = 0x60+base.length+exp.length+mod.length
+                add(freemem, 0x60), // output offset
+                ml // output size
             )
-
             switch success
             case 0 {
                 invalid()
             } //fail where we haven't enough gas to make the call
 
-            let length := ml
-            let msword_ptr := add(freemem, 0x60)
-
-            r := sub(msword_ptr, 0x20)
-            mstore(r, length)
-
-            // point to the location of the return value (length, bits)
-            //assuming mod length is multiple of 32, return value is already in the right format.
-            mstore(0x40, add(add(0x60, freemem), ml)) //deallocate freemem pointer
+            // point to mod length, result was placed immediately after
+            r := add(freemem, 0x40)
+            //adjust freemem pointer
+            mstore(0x40, add(add(freemem, 0x60), ml))
         }
     }
 }
