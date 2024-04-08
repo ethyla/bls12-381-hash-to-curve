@@ -159,7 +159,7 @@ contract HashToCurve {
     /// @dev Follows https://datatracker.ietf.org/doc/html/rfc9380#section-5.3
     /// @dev bytes32[] because len_in_bytes is always a multiple of 32 in our case even 128
     /// @param message Arbitrarylength byte string to be hashed
-    /// @param dst The domain separation tag of at most 32 bytes (should be 255)
+    /// @param dst The domain separation tag of at most 255 bytes
     /// @param lenInBytes The length of the requested output in bytes
     /// @return A field point
     function expandMsgXmd(
@@ -175,7 +175,7 @@ contract HashToCurve {
         // 2.  ABORT if ell > 255 or len_in_bytes > 65535 or len(DST) > 255
         require(ell <= 255, "len_in_bytes too large for sha256");
         // Not really needed because of parameter type
-        require(lenInBytes <= 65535, "len_in_bytes too large");
+        // require(lenInBytes <= 65535, "len_in_bytes too large");
         // no length normalizing via hashing
         require(dst.length <= 255, "dst too long");
 
