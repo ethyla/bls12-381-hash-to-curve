@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {console} from "forge-std/Test.sol";
-
 struct Field_point {
-    bytes u;
+    bytes32[2] u;
 }
 
 struct Field_point_2 {
-    bytes u;
-    bytes u_I;
+    bytes32[2] u;
+    bytes32[2] u_I;
 }
 
 struct G1_point {
@@ -160,17 +158,17 @@ contract Hash_to_curve {
 
     // maps a field point to a G1 point using the precompile
     function map_fp_to_g1(
-        bytes memory fp
+        bytes32[2] memory input
     ) internal view returns (bytes32[4] memory) {
-        bytes32 a;
-        bytes32 b;
-        assembly {
-            a := mload(add(fp, 0x20))
-            b := mload(add(fp, 0x40))
-        }
-        bytes32[2] memory input;
-        input[0] = a;
-        input[1] = b;
+        // bytes32 a;
+        // bytes32 b;
+        // assembly {
+        //     a := mload(add(fp, 0x20))
+        //     b := mload(add(fp, 0x40))
+        // }
+        // bytes32[2] memory input;
+        // input[0] = a;
+        // input[1] = b;
 
         bytes32[4] memory result;
 
@@ -198,24 +196,24 @@ contract Hash_to_curve {
     function map_fp2_to_g2(
         Field_point_2 memory fp2
     ) internal view returns (bytes32[8] memory) {
-        bytes memory fp = bytes.concat(fp2.u, fp2.u_I);
+        // bytes memory fp = bytes.concat(fp2.u, fp2.u_I);
 
-        bytes32 a;
-        bytes32 b;
-        bytes32 c;
-        bytes32 d;
-        assembly {
-            a := mload(add(fp, 0x20))
-            b := mload(add(fp, 0x40))
-            c := mload(add(fp, 0x60))
-            d := mload(add(fp, 0x80))
-        }
+        // bytes32 a;
+        // bytes32 b;
+        // bytes32 c;
+        // bytes32 d;
+        // assembly {
+        //     a := mload(add(fp, 0x20))
+        //     b := mload(add(fp, 0x40))
+        //     c := mload(add(fp, 0x60))
+        //     d := mload(add(fp, 0x80))
+        // }
 
         bytes32[4] memory input;
-        input[0] = a;
-        input[1] = b;
-        input[2] = c;
-        input[3] = d;
+        input[0] = fp2.u[0];
+        input[1] = fp2.u[1];
+        input[2] = fp2.u_I[0];
+        input[3] = fp2.u_I[1];
 
         bytes32[8] memory result;
 
@@ -390,7 +388,7 @@ contract Hash_to_curve {
     function _modfield(
         bytes32 _b1,
         bytes32 _b2
-    ) internal view returns (bytes memory r) {
+    ) internal view returns (bytes32[2] memory r) {
         assembly {
             let bl := 0x40
             let ml := 0x40
@@ -442,7 +440,7 @@ contract Hash_to_curve {
             } //fail where we haven't enough gas to make the call
 
             // point to mod length, result was placed immediately after
-            r := add(freemem, 0x40)
+            r := add(freemem, 0x60)
             //adjust freemem pointer
             mstore(0x40, add(add(freemem, 0x60), ml))
         }

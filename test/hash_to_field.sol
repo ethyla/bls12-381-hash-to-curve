@@ -31,10 +31,16 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1_I = hex"00000000000000000000000000000000145a81e418d4010cc027a68f14391b30074e89e60ee7a22f87217b2f6eb0c4b94c9115b436e6fa4607e95a98de30a435";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[0].u_I, expected_u0_I);
-        assertEq(result[1].u, expected_u1);
-        assertEq(result[1].u_I, expected_u1_I);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(
+            bytes.concat(result[0].u_I[0], result[0].u_I[1]),
+            expected_u0_I
+        );
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
+        assertEq(
+            bytes.concat(result[1].u_I[0], result[1].u_I[1]),
+            expected_u1_I
+        );
     }
 
     function test_hash_to_field_fp2_msg_abc() public view {
@@ -51,10 +57,16 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1_I = hex"0000000000000000000000000000000008b852331c96ed983e497ebc6dee9b75e373d923b729194af8e72a051ea586f3538a6ebb1e80881a082fa2b24df9f566";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[0].u_I, expected_u0_I);
-        assertEq(result[1].u, expected_u1);
-        assertEq(result[1].u_I, expected_u1_I);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(
+            bytes.concat(result[0].u_I[0], result[0].u_I[1]),
+            expected_u0_I
+        );
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
+        assertEq(
+            bytes.concat(result[1].u_I[0], result[1].u_I[1]),
+            expected_u1_I
+        );
     }
 
     function test_hash_to_field_msg_fp2_abcdef0123456789() public view {
@@ -71,10 +83,16 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1_I = hex"0000000000000000000000000000000001897665d9cb5db16a27657760bbea7951f67ad68f8d55f7113f24ba6ddd82caef240a9bfa627972279974894701d975";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[0].u_I, expected_u0_I);
-        assertEq(result[1].u, expected_u1);
-        assertEq(result[1].u_I, expected_u1_I);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(
+            bytes.concat(result[0].u_I[0], result[0].u_I[1]),
+            expected_u0_I
+        );
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
+        assertEq(
+            bytes.concat(result[1].u_I[0], result[1].u_I[1]),
+            expected_u1_I
+        );
     }
 
     function test_hash_to_field_fp2_msg_q128() public view {
@@ -91,10 +109,16 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1_I = hex"0000000000000000000000000000000010c4df2cacf67ea3cb3108b00d4cbd0b3968031ebc8eac4b1ebcefe84d6b715fde66bef0219951ece29d1facc8a520ef";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[0].u_I, expected_u0_I);
-        assertEq(result[1].u, expected_u1);
-        assertEq(result[1].u_I, expected_u1_I);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(
+            bytes.concat(result[0].u_I[0], result[0].u_I[1]),
+            expected_u0_I
+        );
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
+        assertEq(
+            bytes.concat(result[1].u_I[0], result[1].u_I[1]),
+            expected_u1_I
+        );
     }
 
     function test_hash_to_field_fp2_msg_a512() public view {
@@ -111,10 +135,16 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1_I = hex"00000000000000000000000000000000117d9a0defc57a33ed208428cb84e54c85a6840e7648480ae428838989d25d97a0af8e3255be62b25c2a85630d2dddd8";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[0].u_I, expected_u0_I);
-        assertEq(result[1].u, expected_u1);
-        assertEq(result[1].u_I, expected_u1_I);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(
+            bytes.concat(result[0].u_I[0], result[0].u_I[1]),
+            expected_u0_I
+        );
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
+        assertEq(
+            bytes.concat(result[1].u_I[0], result[1].u_I[1]),
+            expected_u1_I
+        );
     }
 
     function test_hash_to_field_fp_empty_msg() public view {
@@ -127,8 +157,8 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1 = hex"00000000000000000000000000000000019b9bd7979f12657976de2884c7cce192b82c177c80e0ec604436a7f538d231552f0d96d9f7babe5fa3b19b3ff25ac9";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[1].u, expected_u1);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
     }
 
     function test_hash_to_field_fp_msg_abc() public view {
@@ -141,8 +171,8 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1 = hex"00000000000000000000000000000000003574a00b109ada2f26a37a91f9d1e740dffd8d69ec0c35e1e9f4652c7dba61123e9dd2e76c655d956e2b3462611139";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[1].u, expected_u1);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
     }
 
     function test_hash_to_field_fp_msg_abcdef0123456789() public view {
@@ -155,8 +185,8 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1 = hex"000000000000000000000000000000000cdc3e2f271f29c4ff75020857ce6c5d36008c9b48385ea2f2bf6f96f428a3deb798aa033cd482d1cdc8b30178b08e3a";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[1].u, expected_u1);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
     }
 
     function test_hash_to_field_fp_msg_q128() public view {
@@ -169,8 +199,8 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1 = hex"000000000000000000000000000000000b1a912064fb0554b180e07af7e787f1f883a0470759c03c1b6509eb8ce980d1670305ae7b928226bb58fdc0a419f46e";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[1].u, expected_u1);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
     }
 
     function test_hash_to_field_fp_msg_a512() public view {
@@ -183,7 +213,7 @@ contract Hash_to_field_Test is Test {
         bytes
             memory expected_u1 = hex"0000000000000000000000000000000005d487032f602c90fa7625dbafe0f4a49ef4a6b0b33d7bb349ff4cf5410d297fd6241876e3e77b651cfc8191e40a68b7";
 
-        assertEq(result[0].u, expected_u0);
-        assertEq(result[1].u, expected_u1);
+        assertEq(bytes.concat(result[0].u[0], result[0].u[1]), expected_u0);
+        assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
     }
 }
