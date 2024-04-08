@@ -2,23 +2,23 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Hash_to_curve, Field_point, Field_point_2} from "../src/Hash_to_curve.sol";
+import {HashToCurve, FieldPoint, FieldPoint2} from "../src/HashToCurve.sol";
 
 contract Hash_to_field_Test is Test {
     bytes hash_to_G2_DST = "QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_";
     bytes hash_to_G1_DST = "QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
 
-    Hash_to_curve public hasher;
+    HashToCurve public hasher;
 
     function setUp() public {
-        hasher = new Hash_to_curve();
+        hasher = new HashToCurve();
     }
 
     //test cases from:
     //https://datatracker.ietf.org/doc/html/rfc9380#name-bls12381g1_xmdsha-256_sswu_
     //https://datatracker.ietf.org/doc/html/rfc9380#name-bls12381g2_xmdsha-256_sswu_
-    function test_hash_to_field_fp2_empty_msg() public view {
-        Field_point_2[2] memory result = hasher.hash_to_field_fp2(
+    function testHashToFieldFp2_empty_msg() public view {
+        FieldPoint2[2] memory result = hasher.hashToFieldFp2(
             "",
             hash_to_G2_DST
         );
@@ -43,8 +43,8 @@ contract Hash_to_field_Test is Test {
         );
     }
 
-    function test_hash_to_field_fp2_msg_abc() public view {
-        Field_point_2[2] memory result = hasher.hash_to_field_fp2(
+    function testHashToFieldFp2_msg_abc() public view {
+        FieldPoint2[2] memory result = hasher.hashToFieldFp2(
             "abc",
             hash_to_G2_DST
         );
@@ -69,8 +69,8 @@ contract Hash_to_field_Test is Test {
         );
     }
 
-    function test_hash_to_field_msg_fp2_abcdef0123456789() public view {
-        Field_point_2[2] memory result = hasher.hash_to_field_fp2(
+    function testHash_to_field_msg_fp2_abcdef0123456789() public view {
+        FieldPoint2[2] memory result = hasher.hashToFieldFp2(
             "abcdef0123456789",
             hash_to_G2_DST
         );
@@ -95,8 +95,8 @@ contract Hash_to_field_Test is Test {
         );
     }
 
-    function test_hash_to_field_fp2_msg_q128() public view {
-        Field_point_2[2] memory result = hasher.hash_to_field_fp2(
+    function testHashToFieldFp2_msg_q128() public view {
+        FieldPoint2[2] memory result = hasher.hashToFieldFp2(
             "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
             hash_to_G2_DST
         );
@@ -121,8 +121,8 @@ contract Hash_to_field_Test is Test {
         );
     }
 
-    function test_hash_to_field_fp2_msg_a512() public view {
-        Field_point_2[2] memory result = hasher.hash_to_field_fp2(
+    function testHashToFieldFp2_msg_a512() public view {
+        FieldPoint2[2] memory result = hasher.hashToFieldFp2(
             "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             hash_to_G2_DST
         );
@@ -147,11 +147,8 @@ contract Hash_to_field_Test is Test {
         );
     }
 
-    function test_hash_to_field_fp_empty_msg() public view {
-        Field_point[2] memory result = hasher.hash_to_field_fp(
-            "",
-            hash_to_G1_DST
-        );
+    function testHashToFieldFp_empty_msg() public view {
+        FieldPoint[2] memory result = hasher.hashToFieldFp("", hash_to_G1_DST);
         bytes
             memory expected_u0 = hex"000000000000000000000000000000000ba14bd907ad64a016293ee7c2d276b8eae71f25a4b941eece7b0d89f17f75cb3ae5438a614fb61d6835ad59f29c564f";
         bytes
@@ -161,8 +158,8 @@ contract Hash_to_field_Test is Test {
         assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
     }
 
-    function test_hash_to_field_fp_msg_abc() public view {
-        Field_point[2] memory result = hasher.hash_to_field_fp(
+    function testHashToFieldFp_msg_abc() public view {
+        FieldPoint[2] memory result = hasher.hashToFieldFp(
             "abc",
             hash_to_G1_DST
         );
@@ -175,8 +172,8 @@ contract Hash_to_field_Test is Test {
         assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
     }
 
-    function test_hash_to_field_fp_msg_abcdef0123456789() public view {
-        Field_point[2] memory result = hasher.hash_to_field_fp(
+    function testHashToFieldFp_msg_abcdef0123456789() public view {
+        FieldPoint[2] memory result = hasher.hashToFieldFp(
             "abcdef0123456789",
             hash_to_G1_DST
         );
@@ -189,8 +186,8 @@ contract Hash_to_field_Test is Test {
         assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
     }
 
-    function test_hash_to_field_fp_msg_q128() public view {
-        Field_point[2] memory result = hasher.hash_to_field_fp(
+    function testHashToFieldFp_msg_q128() public view {
+        FieldPoint[2] memory result = hasher.hashToFieldFp(
             "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
             hash_to_G1_DST
         );
@@ -203,8 +200,8 @@ contract Hash_to_field_Test is Test {
         assertEq(bytes.concat(result[1].u[0], result[1].u[1]), expected_u1);
     }
 
-    function test_hash_to_field_fp_msg_a512() public view {
-        Field_point[2] memory result = hasher.hash_to_field_fp(
+    function testHashToFieldFp_msg_a512() public view {
+        FieldPoint[2] memory result = hasher.hashToFieldFp(
             "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             hash_to_G1_DST
         );

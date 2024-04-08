@@ -1,16 +1,13 @@
 const { expect } = require("chai");
 const hre = require("hardhat");
-let dst_g1 = hre.ethers.toUtf8Bytes("BLS12381G1_XMD:SHA-256_SSWU_RO_TESTGEN");
-let dst_g2 = hre.ethers.toUtf8Bytes("BLS12381G2_XMD:SHA-256_SSWU_RO_TESTGEN");
+let DSTG1 = hre.ethers.toUtf8Bytes("BLS12381G1_XMD:SHA-256_SSWU_RO_TESTGEN");
+let DSTG2 = hre.ethers.toUtf8Bytes("BLS12381G2_XMD:SHA-256_SSWU_RO_TESTGEN");
 
 describe("Run rfc hash to curve tests G1", function () {
   it("Should return correct value for empty msg", async function () {
-    const hasher = await hre.ethers.deployContract("Hash_to_curve");
+    const hasher = await hre.ethers.deployContract("HashToCurve");
     await hasher.waitForDeployment();
-    let result = await hasher.hash_to_curve_g1(
-      hre.ethers.toUtf8Bytes(""),
-      dst_g1
-    );
+    let result = await hasher.hashToCurveG1(hre.ethers.toUtf8Bytes(""), DSTG1);
     expect(result.x).to.equal(
       "0x000000000000000000000000000000000576730ab036cbac1d95b38dca905586f28d0a59048db4e8778782d89bff856ddef89277ead5a21e2975c4a6e3d8c79e"
     );
@@ -20,11 +17,11 @@ describe("Run rfc hash to curve tests G1", function () {
   });
 
   it("Should return correct value for msg abc", async function () {
-    const hasher = await hre.ethers.deployContract("Hash_to_curve");
+    const hasher = await hre.ethers.deployContract("HashToCurve");
     await hasher.waitForDeployment();
-    let result = await hasher.hash_to_curve_g1(
+    let result = await hasher.hashToCurveG1(
       hre.ethers.toUtf8Bytes("abc"),
-      dst_g1
+      DSTG1
     );
     expect(result.x).to.equal(
       "0x00000000000000000000000000000000061daf0cc00d8912dac1d4cf5a7c32fca97f8b3bf3f805121888e5eb89f77f9a9f406569027ac6d0e61b1229f42c43d6"
@@ -35,11 +32,11 @@ describe("Run rfc hash to curve tests G1", function () {
   });
 
   it("Should return correct value for msg abcdef0123456789", async function () {
-    const hasher = await hre.ethers.deployContract("Hash_to_curve");
+    const hasher = await hre.ethers.deployContract("HashToCurve");
     await hasher.waitForDeployment();
-    let result = await hasher.hash_to_curve_g1(
+    let result = await hasher.hashToCurveG1(
       hre.ethers.toUtf8Bytes("abcdef0123456789"),
-      dst_g1
+      DSTG1
     );
     expect(result.x).to.equal(
       "0x000000000000000000000000000000000fb3455436843e76079c7cf3dfef75e5a104dfe257a29a850c145568d500ad31ccfe79be9ae0ea31a722548070cf98cd"
@@ -50,13 +47,13 @@ describe("Run rfc hash to curve tests G1", function () {
   });
 
   it("Should return correct value for msg a512 large", async function () {
-    const hasher = await hre.ethers.deployContract("Hash_to_curve");
+    const hasher = await hre.ethers.deployContract("HashToCurve");
     await hasher.waitForDeployment();
-    let result = await hasher.hash_to_curve_g1(
+    let result = await hasher.hashToCurveG1(
       hre.ethers.toUtf8Bytes(
         "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       ),
-      dst_g1
+      DSTG1
     );
     expect(result.x).to.equal(
       "0x000000000000000000000000000000000514af2137c1ae1d78d5cb97ee606ea142824c199f0f25ac463a0c78200de57640d34686521d3e9cf6b3721834f8a038"
@@ -69,12 +66,9 @@ describe("Run rfc hash to curve tests G1", function () {
 
 describe("Run rfc hash to curve tests G2", function () {
   it("Should return correct value for empty msg", async function () {
-    const hasher = await hre.ethers.deployContract("Hash_to_curve");
+    const hasher = await hre.ethers.deployContract("HashToCurve");
     await hasher.waitForDeployment();
-    let result = await hasher.hash_to_curve_g2(
-      hre.ethers.toUtf8Bytes(""),
-      dst_g2
-    );
+    let result = await hasher.hashToCurveG2(hre.ethers.toUtf8Bytes(""), DSTG2);
     expect(result.x).to.equal(
       "0x000000000000000000000000000000000a650bd36ae7455cb3fe5d8bb1310594551456f5c6593aec9ee0c03d2f6cb693bd2c5e99d4e23cbaec767609314f51d3"
     );
@@ -90,11 +84,11 @@ describe("Run rfc hash to curve tests G2", function () {
   });
 
   it("Should return correct value for msg abc", async function () {
-    const hasher = await hre.ethers.deployContract("Hash_to_curve");
+    const hasher = await hre.ethers.deployContract("HashToCurve");
     await hasher.waitForDeployment();
-    let result = await hasher.hash_to_curve_g2(
+    let result = await hasher.hashToCurveG2(
       hre.ethers.toUtf8Bytes("abc"),
-      dst_g2
+      DSTG2
     );
     expect(result.x).to.equal(
       "0x000000000000000000000000000000001953ce6d4267939c7360756d9cca8eb34aac4633ef35369a7dc249445069888e7d1b3f9d2e75fbd468fbcbba7110ea02"
@@ -111,11 +105,11 @@ describe("Run rfc hash to curve tests G2", function () {
   });
 
   it("Should return correct value for msg abcdef0123456789", async function () {
-    const hasher = await hre.ethers.deployContract("Hash_to_curve");
+    const hasher = await hre.ethers.deployContract("HashToCurve");
     await hasher.waitForDeployment();
-    let result = await hasher.hash_to_curve_g2(
+    let result = await hasher.hashToCurveG2(
       hre.ethers.toUtf8Bytes("abcdef0123456789"),
-      dst_g2
+      DSTG2
     );
     expect(result.x).to.equal(
       "0x0000000000000000000000000000000017b461fc3b96a30c2408958cbfa5f5927b6063a8ad199d5ebf2d7cdeffa9c20c85487204804fab53f950b2f87db365aa"
@@ -132,13 +126,13 @@ describe("Run rfc hash to curve tests G2", function () {
   });
 
   it("Should return correct value for msg a512 large", async function () {
-    const hasher = await hre.ethers.deployContract("Hash_to_curve");
+    const hasher = await hre.ethers.deployContract("HashToCurve");
     await hasher.waitForDeployment();
-    let result = await hasher.hash_to_curve_g2(
+    let result = await hasher.hashToCurveG2(
       hre.ethers.toUtf8Bytes(
         "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       ),
-      dst_g2
+      DSTG2
     );
     expect(result.x).to.equal(
       "0x000000000000000000000000000000000a162306f3b0f2bb326f0c4fb0e1fea020019c3af796dcd1d7264f50ddae94cacf3cade74603834d44b9ab3d5d0a6c98"

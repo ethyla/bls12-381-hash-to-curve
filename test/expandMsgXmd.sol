@@ -2,35 +2,31 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Hash_to_curve} from "../src/Hash_to_curve.sol";
+import {HashToCurve} from "../src/HashToCurve.sol";
 
 contract Hash_to_curveTest is Test {
-    bytes expand_msg_DST = "QUUX-V01-CS02-with-expander-SHA256-128";
+    bytes EXPAND_MSG_DST = "QUUX-V01-CS02-with-expander-SHA256-128";
 
-    Hash_to_curve public hasher;
+    HashToCurve public hasher;
 
     function setUp() public {
-        hasher = new Hash_to_curve();
+        hasher = new HashToCurve();
     }
 
     //test cases from:
     //https://datatracker.ietf.org/doc/html/rfc9380#name-expand_message_xmdsha-256
-    function test_expand_msg_xmd_empty_msg_0x20() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
-            "",
-            expand_msg_DST,
-            0x20
-        );
+    function testExpandMsgXmd_empty_msg_0x20() public view {
+        bytes32[] memory result = hasher.expandMsgXmd("", EXPAND_MSG_DST, 0x20);
         bytes
             memory expected = hex"68a985b87eb6b46952128911f2a4412bbc302a9d759667f87f7a21d803f07235";
 
         assertEq(bytes.concat(result[0]), expected);
     }
 
-    function test_expand_msg_xmd_abc_0x20() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
+    function testExpandMsgXmd_abc_0x20() public view {
+        bytes32[] memory result = hasher.expandMsgXmd(
             "abc",
-            expand_msg_DST,
+            EXPAND_MSG_DST,
             0x20
         );
         bytes
@@ -39,10 +35,10 @@ contract Hash_to_curveTest is Test {
         assertEq(bytes.concat(result[0]), expected);
     }
 
-    function test_expand_msg_xmd_abcdef0123456789_0x20() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
+    function testExpandMsgXmd_abcdef0123456789_0x20() public view {
+        bytes32[] memory result = hasher.expandMsgXmd(
             "abcdef0123456789",
-            expand_msg_DST,
+            EXPAND_MSG_DST,
             0x20
         );
         bytes
@@ -51,10 +47,10 @@ contract Hash_to_curveTest is Test {
         assertEq(bytes.concat(result[0]), expected);
     }
 
-    function test_expand_msg_xmd_q128_0x20() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
+    function testExpandMsgXmd_q128_0x20() public view {
+        bytes32[] memory result = hasher.expandMsgXmd(
             "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
-            expand_msg_DST,
+            EXPAND_MSG_DST,
             0x20
         );
         bytes
@@ -63,10 +59,10 @@ contract Hash_to_curveTest is Test {
         assertEq(bytes.concat(result[0]), expected);
     }
 
-    function test_expand_msg_xmd_a512_0x20() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
+    function testExpandMsgXmd_a512_0x20() public view {
+        bytes32[] memory result = hasher.expandMsgXmd(
             "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            expand_msg_DST,
+            EXPAND_MSG_DST,
             0x20
         );
         bytes
@@ -75,12 +71,8 @@ contract Hash_to_curveTest is Test {
         assertEq(bytes.concat(result[0]), expected);
     }
 
-    function test_expand_msg_xmd_empty_msg_0x80() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
-            "",
-            expand_msg_DST,
-            0x80
-        );
+    function testExpandMsgXmd_empty_msg_0x80() public view {
+        bytes32[] memory result = hasher.expandMsgXmd("", EXPAND_MSG_DST, 0x80);
         bytes
             memory expected = hex"af84c27ccfd45d41914fdff5df25293e221afc53d8ad2ac06d5e3e29485dadbee0d121587713a3e0dd4d5e69e93eb7cd4f5df4cd103e188cf60cb02edc3edf18eda8576c412b18ffb658e3dd6ec849469b979d444cf7b26911a08e63cf31f9dcc541708d3491184472c2c29bb749d4286b004ceb5ee6b9a7fa5b646c993f0ced";
 
@@ -90,10 +82,10 @@ contract Hash_to_curveTest is Test {
         );
     }
 
-    function test_expand_msg_xmd_abc_0x80() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
+    function testExpandMsgXmd_abc_0x80() public view {
+        bytes32[] memory result = hasher.expandMsgXmd(
             "abc",
-            expand_msg_DST,
+            EXPAND_MSG_DST,
             0x80
         );
         bytes
@@ -105,10 +97,10 @@ contract Hash_to_curveTest is Test {
         );
     }
 
-    function test_expand_msg_xmd_abcdef0123456789_0x80() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
+    function testExpandMsgXmd_abcdef0123456789_0x80() public view {
+        bytes32[] memory result = hasher.expandMsgXmd(
             "abcdef0123456789",
-            expand_msg_DST,
+            EXPAND_MSG_DST,
             0x80
         );
         bytes
@@ -120,10 +112,10 @@ contract Hash_to_curveTest is Test {
         );
     }
 
-    function test_expand_msg_xmd_q128_0x80() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
+    function testExpandMsgXmd_q128_0x80() public view {
+        bytes32[] memory result = hasher.expandMsgXmd(
             "q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
-            expand_msg_DST,
+            EXPAND_MSG_DST,
             0x80
         );
         bytes
@@ -135,10 +127,10 @@ contract Hash_to_curveTest is Test {
         );
     }
 
-    function test_expand_msg_xmd_a512_0x80() public view {
-        bytes32[] memory result = hasher.expand_msg_xmd(
+    function testExpandMsgXmd_a512_0x80() public view {
+        bytes32[] memory result = hasher.expandMsgXmd(
             "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            expand_msg_DST,
+            EXPAND_MSG_DST,
             0x80
         );
         bytes

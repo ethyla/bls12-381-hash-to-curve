@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {readable_Hash_to_curve} from "../src/readable_Hash_to_curve.sol";
+import {readable_Hash_to_curve} from "../src/readable_HashToCurve.sol";
 
 contract readable_Hash_to_curveTest is Test {
     readable_Hash_to_curve public hasher;

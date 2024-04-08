@@ -2,8 +2,8 @@
 pragma solidity ^0.8.13;
 
 // used to test for the g1 add precompile at the 0a address
-contract EIP_tester {
-    function test_BLS12_G1ADD() public view returns (bytes32[4] memory) {
+contract EIPTester {
+    function testBLS12381G1ADD() public view returns (bytes32[4] memory) {
         bytes32[8] memory input;
         input[
             0

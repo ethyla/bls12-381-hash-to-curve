@@ -1,79 +1,79 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-struct Field_point {
+struct FieldPoint {
     bytes32[2] u;
 }
 
-struct Field_point_2 {
+struct FieldPoint2 {
     bytes32[2] u;
     bytes32[2] u_I;
 }
 
-struct G1_point {
+struct G1Point {
     bytes x;
     bytes y;
 }
 
-struct G2_point {
+struct G2Point {
     bytes x;
     bytes x_I;
     bytes y;
     bytes y_I;
 }
 
-contract Hash_to_curve {
+contract HashToCurve {
     // Input: msg, an arbitrary-length byte string.
     // Output: P, a point in G.
-    function hash_to_curve_g1(
+    function hashToCurveG1(
         bytes calldata message,
         bytes calldata dst
-    ) external view returns (G1_point memory) {
+    ) external view returns (G1Point memory) {
         // 1. u = hash_to_field(msg, 2)
-        Field_point[2] memory u = hash_to_field_fp(message, dst);
+        FieldPoint[2] memory u = hashToFieldFp(message, dst);
         // 2. Q0 = map_to_curve(u[0])
-        bytes32[4] memory Q0 = map_fp_to_g1(u[0].u);
+        bytes32[4] memory q0 = mapFpToG1(u[0].u);
         // 3. Q1 = map_to_curve(u[1])
-        bytes32[4] memory Q1 = map_fp_to_g1(u[1].u);
+        bytes32[4] memory q1 = mapFpToG1(u[1].u);
         // 4. R = Q0 + Q1              # Point addition
-        bytes32[4] memory R = add_g1(Q0, Q1);
+        bytes32[4] memory r = addG1(q0, q1);
         // 5. P = clear_cofactor(R)
         // Not needed as map fp to g1 already does it
         // 6. return P
-        G1_point memory P = G1_point({
-            x: bytes.concat(R[0], R[1]),
-            y: bytes.concat(R[2], R[3])
+        G1Point memory p = G1Point({
+            x: bytes.concat(r[0], r[1]),
+            y: bytes.concat(r[2], r[3])
         });
-        return P;
+        return p;
     }
 
-    function hash_to_curve_g2(
+    function hashToCurveG2(
         bytes calldata message,
         bytes calldata dst
-    ) external view returns (G2_point memory) {
+    ) external view returns (G2Point memory) {
         // 1. u = hash_to_field(msg, 2)
-        Field_point_2[2] memory u = hash_to_field_fp2(message, dst);
+        FieldPoint2[2] memory u = hashToFieldFp2(message, dst);
         // 2. Q0 = map_to_curve(u[0])
-        bytes32[8] memory Q0 = map_fp2_to_g2(u[0]);
+        bytes32[8] memory q0 = mapFp2ToG2(u[0]);
         // 3. Q1 = map_to_curve(u[1])
-        bytes32[8] memory Q1 = map_fp2_to_g2(u[1]);
+        bytes32[8] memory q1 = mapFp2ToG2(u[1]);
         // 4. R = Q0 + Q1              # Point addition
-        bytes32[8] memory R = add_g2(Q0, Q1);
+        bytes32[8] memory r = addG2(q0, q1);
         // 5. P = clear_cofactor(R)
         // Not needed as map fp to g1 already does it
         // 6. return P
-        G2_point memory P = G2_point({
-            x: bytes.concat(R[0], R[1]),
-            x_I: bytes.concat(R[2], R[3]),
-            y: bytes.concat(R[4], R[5]),
-            y_I: bytes.concat(R[6], R[7])
+        G2Point memory p = G2Point({
+            x: bytes.concat(r[0], r[1]),
+            x_I: bytes.concat(r[2], r[3]),
+            y: bytes.concat(r[4], r[5]),
+            y_I: bytes.concat(r[6], r[7])
         });
 
-        return P;
+        return p;
     }
 
     // adds two G1 points using the precompile
-    function add_g1(
+    function addG1(
         bytes32[4] memory point1,
         bytes32[4] memory point2
     ) internal view returns (bytes32[4] memory) {
@@ -110,7 +110,7 @@ contract Hash_to_curve {
     }
 
     // adds two G2 points using the precompile
-    function add_g2(
+    function addG2(
         bytes32[8] memory point1,
         bytes32[8] memory point2
     ) internal view returns (bytes32[8] memory) {
@@ -157,7 +157,7 @@ contract Hash_to_curve {
     }
 
     // maps a field point to a G1 point using the precompile
-    function map_fp_to_g1(
+    function mapFpToG1(
         bytes32[2] memory input
     ) internal view returns (bytes32[4] memory) {
         // bytes32 a;
@@ -193,8 +193,8 @@ contract Hash_to_curve {
     }
 
     // maps a field point 2 to a G2 point using the precompile
-    function map_fp2_to_g2(
-        Field_point_2 memory fp2
+    function mapFp2ToG2(
+        FieldPoint2 memory fp2
     ) internal view returns (bytes32[8] memory) {
         // bytes memory fp = bytes.concat(fp2.u, fp2.u_I);
 
@@ -243,20 +243,20 @@ contract Hash_to_curve {
     // - count, the number of elements of F to output.
     // count is always 2 for curve to hash usage
     // - DST, a domain separation tag (see Section 3.1).
-    function hash_to_field_fp2(
+    function hashToFieldFp2(
         bytes calldata message,
         bytes calldata dst
-    ) public view returns (Field_point_2[2] memory) {
+    ) public view returns (FieldPoint2[2] memory) {
         // 1. len_in_bytes = count * m * L
         // so always 2 * 2 * 64 = 256
-        uint16 len_in_bytes = 256;
+        uint16 lenInBytes = 256;
         // 2. uniform_bytes = expand_message(msg, DST, len_in_bytes)
-        bytes32[] memory pseudo_random_bytes = expand_msg_xmd(
+        bytes32[] memory pseudoRandomBytes = expandMsgXmd(
             message,
             dst,
-            len_in_bytes
+            lenInBytes
         );
-        Field_point_2[2] memory u;
+        FieldPoint2[2] memory u;
         // No loop here saves 800 gas hardcoding offset an additional 300
         // 3. for i in (0, ..., count - 1):
         // 4.   for j in (0, ..., m - 1):
@@ -267,10 +267,10 @@ contract Hash_to_curve {
         // 7.     e_j = OS2IP(tv) mod p
         // 8.   u_i = (e_0, ..., e_(m - 1))
         // tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
-        u[0].u = _modfield(pseudo_random_bytes[0], pseudo_random_bytes[1]);
-        u[0].u_I = _modfield(pseudo_random_bytes[2], pseudo_random_bytes[3]);
-        u[1].u = _modfield(pseudo_random_bytes[4], pseudo_random_bytes[5]);
-        u[1].u_I = _modfield(pseudo_random_bytes[6], pseudo_random_bytes[7]);
+        u[0].u = _modfield(pseudoRandomBytes[0], pseudoRandomBytes[1]);
+        u[0].u_I = _modfield(pseudoRandomBytes[2], pseudoRandomBytes[3]);
+        u[1].u = _modfield(pseudoRandomBytes[4], pseudoRandomBytes[5]);
+        u[1].u_I = _modfield(pseudoRandomBytes[6], pseudoRandomBytes[7]);
         // 9. return (u_0, ..., u_(count - 1))
         return u;
     }
@@ -280,31 +280,31 @@ contract Hash_to_curve {
     // - count, the number of elements of F to output.
     // count is always 2 for hash to curve usage
     // - DST, a domain separation tag (see Section 3.1).
-    function hash_to_field_fp(
+    function hashToFieldFp(
         bytes calldata message,
         bytes calldata dst
-    ) public view returns (Field_point[2] memory) {
+    ) public view returns (FieldPoint[2] memory) {
         // len_in_bytes = count * m * HTF_L
         // so always 2 * 1 * 64 = 128
-        uint16 len_in_bytes = 128;
+        uint16 lenInBytes = 128;
 
-        bytes32[] memory pseudo_random_bytes = expand_msg_xmd(
+        bytes32[] memory pseudoRandomBytes = expandMsgXmd(
             message,
             dst,
-            len_in_bytes
+            lenInBytes
         );
-        Field_point[2] memory u;
+        FieldPoint[2] memory u;
 
         // No loop here saves 800 gas
         // uint8 HTF_L = 64;
         // bytes memory tv = new bytes(64);
         // uint256 elm_offset = 0 * 2;
         // tv = bytes.concat(pseudo_random_bytes[0], pseudo_random_bytes[1]);
-        u[0].u = _modfield(pseudo_random_bytes[0], pseudo_random_bytes[1]);
+        u[0].u = _modfield(pseudoRandomBytes[0], pseudoRandomBytes[1]);
 
         // uint256 elm_offset2 = 1 * 2;
         // tv = bytes.concat(pseudo_random_bytes[2], pseudo_random_bytes[3]);
-        u[1].u = _modfield(pseudo_random_bytes[2], pseudo_random_bytes[3]);
+        u[1].u = _modfield(pseudoRandomBytes[2], pseudoRandomBytes[3]);
 
         return u;
     }
@@ -316,56 +316,56 @@ contract Hash_to_curve {
     // - len_in_bytes, the length of the requested output in bytes,
     //   not greater than the lesser of (255 * b_in_bytes) or 2^16-1.
     // returns bytes32[] because len_in_bytes is always a multiple of 32 in our case even 128
-    function expand_msg_xmd(
+    function expandMsgXmd(
         bytes calldata message,
         bytes calldata dst,
-        uint16 len_in_bytes
+        uint16 lenInBytes
     ) public pure returns (bytes32[] memory) {
         // 1.  ell = ceil(len_in_bytes / b_in_bytes)
         // b_in_bytes seems to be 32 for sha256
         // ceil the division
-        uint ell = (len_in_bytes - 1) / 32 + 1;
+        uint ell = (lenInBytes - 1) / 32 + 1;
 
         // 2.  ABORT if ell > 255 or len_in_bytes > 65535 or len(DST) > 255
         require(ell <= 255, "len_in_bytes too large for sha256");
         // Not really needed because of parameter type
-        require(len_in_bytes <= 65535, "len_in_bytes too large");
+        require(lenInBytes <= 65535, "len_in_bytes too large");
         // no length normalizing via hashing
         require(dst.length <= 255, "dst too long");
 
-        bytes memory dst_prime = bytes.concat(dst, bytes1(uint8(dst.length)));
+        bytes memory dstPrime = bytes.concat(dst, bytes1(uint8(dst.length)));
 
         // 4.  Z_pad = I2OSP(0, s_in_bytes)
         // this should be sha256 blocksize so 64 bytes
         bytes
-            memory zpad = hex"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+            memory zPad = hex"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 
         // 5.  l_i_b_str = I2OSP(len_in_bytes, 2)
         // length in byte string?
-        bytes2 l_i_b_str = bytes2(len_in_bytes);
+        bytes2 libStr = bytes2(lenInBytes);
 
         // 6.  msg_prime = Z_pad || msg || l_i_b_str || I2OSP(0, 1) || DST_prime
-        bytes memory msg_prime = bytes.concat(
-            zpad,
+        bytes memory msgPrime = bytes.concat(
+            zPad,
             message,
-            l_i_b_str,
+            libStr,
             hex"00",
-            dst_prime
+            dstPrime
         );
 
         bytes32 b_0;
         bytes32[] memory b = new bytes32[](ell);
 
         // 7.  b_0 = H(msg_prime)
-        b_0 = sha256(msg_prime);
+        b_0 = sha256(msgPrime);
 
         // 8.  b_1 = H(b_0 || I2OSP(1, 1) || DST_prime)
-        b[0] = sha256(bytes.concat(b_0, hex"01", dst_prime));
+        b[0] = sha256(bytes.concat(b_0, hex"01", dstPrime));
 
         // 9.  for i in (2, ..., ell):
         for (uint8 i = 2; i <= ell; i++) {
             // 10.    b_i = H(strxor(b_0, b_(i - 1)) || I2OSP(i, 1) || DST_prime)
-            bytes memory tmp = abi.encodePacked(b_0 ^ b[i - 2], i, dst_prime);
+            bytes memory tmp = abi.encodePacked(b_0 ^ b[i - 2], i, dstPrime);
             b[i - 1] = sha256(tmp);
         }
         // 11. uniform_bytes = b_1 || ... || b_ell
