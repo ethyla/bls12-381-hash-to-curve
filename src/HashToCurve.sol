@@ -268,7 +268,7 @@ contract HashToCurve {
                 0x5, // mpdexp precompile
                 freemem, //input offset
                 0x100, // input size  = 0x60+base.length+exp.length+mod.length
-                add(freemem, 0x60), // output offset
+                freemem, // output offset
                 ml // output size
             )
             switch success
@@ -277,9 +277,9 @@ contract HashToCurve {
             } //fail where we haven't enough gas to make the call
 
             // point to mod length, result was placed immediately after
-            r := add(freemem, 0x60)
+            r := freemem
             //adjust freemem pointer
-            mstore(0x40, add(add(freemem, 0x60), ml))
+            mstore(0x40, add(freemem, ml))
         }
     }
 
