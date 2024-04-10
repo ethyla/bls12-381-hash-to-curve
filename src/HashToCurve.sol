@@ -183,8 +183,11 @@ contract HashToCurve {
 
         // 4.  Z_pad = I2OSP(0, s_in_bytes)
         // this should be sha256 blocksize so 64 bytes
-        bytes
-            memory zPad = hex"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        // bytes
+        //     memory zPad = hex"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        // spliting like below saves 250 gas
+        bytes32 zPad1 = hex"0000000000000000000000000000000000000000000000000000000000000000";
+        bytes32 zPad2 = hex"0000000000000000000000000000000000000000000000000000000000000000";
 
         // 5.  l_i_b_str = I2OSP(len_in_bytes, 2)
         // length in byte string?
@@ -192,7 +195,8 @@ contract HashToCurve {
 
         // 6.  msg_prime = Z_pad || msg || l_i_b_str || I2OSP(0, 1) || DST_prime
         bytes memory msgPrime = bytes.concat(
-            zPad,
+            zPad1,
+            zPad2,
             message,
             libStr,
             hex"00",
