@@ -69,7 +69,7 @@ contract Hash_to_field_Test is Test {
         );
     }
 
-    function testHash_to_field_msg_fp2_abcdef0123456789() public view {
+    function testHashToFieldFp2_msg_abcdef0123456789() public view {
         FieldPoint2[2] memory result = hasher.hashToFieldFp2(
             "abcdef0123456789",
             hash_to_G2_DST
