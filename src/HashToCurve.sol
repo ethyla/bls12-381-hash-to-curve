@@ -190,7 +190,7 @@ contract HashToCurve {
         bytes32 zPad2 = hex"0000000000000000000000000000000000000000000000000000000000000000";
 
         // 5.  l_i_b_str = I2OSP(len_in_bytes, 2)
-        // length in byte string?
+        // length in bytes string
         bytes2 libStr = bytes2(lenInBytes);
 
         // 6.  msg_prime = Z_pad || msg || l_i_b_str || I2OSP(0, 1) || DST_prime
@@ -375,16 +375,6 @@ contract HashToCurve {
     function _mapFpToG1(
         bytes32[2] memory input
     ) internal view returns (bytes32[4] memory) {
-        // bytes32 a;
-        // bytes32 b;
-        // assembly {
-        //     a := mload(add(fp, 0x20))
-        //     b := mload(add(fp, 0x40))
-        // }
-        // bytes32[2] memory input;
-        // input[0] = a;
-        // input[1] = b;
-
         bytes32[4] memory result;
 
         // ABI for mapping Fp element to G1 point precompile
@@ -411,19 +401,6 @@ contract HashToCurve {
     function _mapFp2ToG2(
         FieldPoint2 memory fp2
     ) internal view returns (bytes32[8] memory) {
-        // bytes memory fp = bytes.concat(fp2.u, fp2.u_I);
-
-        // bytes32 a;
-        // bytes32 b;
-        // bytes32 c;
-        // bytes32 d;
-        // assembly {
-        //     a := mload(add(fp, 0x20))
-        //     b := mload(add(fp, 0x40))
-        //     c := mload(add(fp, 0x60))
-        //     d := mload(add(fp, 0x80))
-        // }
-
         bytes32[4] memory input;
         input[0] = fp2.u[0];
         input[1] = fp2.u[1];
